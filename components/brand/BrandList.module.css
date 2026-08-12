@@ -1,0 +1,205 @@
+.list {
+  display: flex;
+  flex-direction: column;
+}
+
+.heading {
+  max-width: 720px;
+}
+
+.eyebrow {
+  margin-bottom: 14px;
+  color: var(--accent-strong);
+  font-size: 0.73rem;
+  font-weight: 750;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+}
+
+.heading h1 {
+  font-size: clamp(2.7rem, 6vw, 5rem);
+  font-weight: 650;
+  line-height: 1;
+  letter-spacing: -0.06em;
+}
+
+.heading > p:last-child {
+  max-width: 600px;
+  margin-top: 18px;
+  color: var(--text-soft);
+  font-size: 1.04rem;
+  line-height: 1.7;
+}
+
+.controls {
+  display: flex;
+  align-items: flex-end;
+  gap: 14px;
+  margin-top: 42px;
+}
+
+.searchLabel,
+.sortLabel {
+  display: flex;
+  flex-direction: column;
+  gap: 9px;
+  color: var(--text-soft);
+  font-size: 0.78rem;
+  font-weight: 650;
+  letter-spacing: 0.04em;
+}
+
+.searchLabel {
+  width: min(100%, 520px);
+  flex: 1;
+}
+
+.sortLabel {
+  width: min(100%, 220px);
+}
+
+.searchInput {
+  width: 100%;
+  min-height: 50px;
+  border: 1px solid var(--border-strong);
+  border-radius: 13px;
+  padding: 0 16px;
+  color: var(--foreground);
+  background: rgba(16, 23, 34, 0.86);
+  transition: border-color 160ms ease, box-shadow 160ms ease, background-color 160ms ease;
+}
+
+.sortSelect {
+  appearance: none;
+  width: 100%;
+  min-height: 50px;
+  border: 1px solid var(--border-strong);
+  border-radius: 13px;
+  padding: 0 42px 0 15px;
+  color: var(--foreground);
+  background-color: var(--surface);
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 14 14' fill='none'%3E%3Cpath d='m3.5 5.25 3.5 3.5 3.5-3.5' stroke='%238996A8' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 16px center;
+  background-size: 14px;
+  font-size: 0.9rem;
+  font-weight: 550;
+  letter-spacing: 0;
+  cursor: pointer;
+  transition: border-color 160ms ease, box-shadow 160ms ease, background-color 160ms ease;
+}
+
+.sortSelect option {
+  color: var(--foreground);
+  background-color: var(--surface);
+}
+
+.sortSelect:hover,
+.sortSelect:focus {
+  border-color: rgba(114, 178, 255, 0.55);
+  background-color: var(--surface-strong);
+}
+
+.sortSelect:focus {
+  outline: none;
+  box-shadow: 0 0 0 4px rgba(78, 157, 255, 0.13);
+}
+
+.searchInput::placeholder {
+  color: #6f7c8d;
+}
+
+.searchInput:hover,
+.searchInput:focus {
+  border-color: rgba(114, 178, 255, 0.55);
+  background: var(--surface);
+}
+
+.searchInput:focus {
+  outline: none;
+  box-shadow: 0 0 0 4px rgba(78, 157, 255, 0.13);
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 16px;
+  margin-top: 38px;
+}
+
+.pagination {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  overflow-x: auto;
+  margin-top: 40px;
+  padding: 4px 4px 10px;
+  scrollbar-color: var(--border-strong) transparent;
+}
+
+.pageButton {
+  min-width: 42px;
+  min-height: 42px;
+  flex: 0 0 auto;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 0 13px;
+  color: var(--text-soft);
+  background: var(--surface);
+  cursor: pointer;
+  transition: color 160ms ease, border-color 160ms ease, background-color 160ms ease;
+}
+
+.pageButton:hover:not(:disabled) {
+  border-color: rgba(114, 178, 255, 0.48);
+  color: var(--foreground);
+  background: var(--surface-hover);
+}
+
+.pageButton:disabled {
+  color: var(--accent-strong);
+  border-color: rgba(78, 157, 255, 0.3);
+  background: var(--accent-soft);
+  cursor: not-allowed;
+}
+
+.pageButton:first-child:disabled,
+.pageButton:last-child:disabled {
+  color: #657184;
+  border-color: var(--border);
+  background: rgba(255, 255, 255, 0.02);
+}
+
+.summary {
+  margin-top: 12px;
+  color: var(--muted);
+  font-family: var(--font-geist-mono), monospace;
+  font-size: 0.78rem;
+}
+
+@media (max-width: 980px) {
+  .grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 720px) {
+  .grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 480px) {
+  .controls {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .sortLabel {
+    width: 100%;
+  }
+
+  .grid {
+    grid-template-columns: 1fr;
+  }
+}

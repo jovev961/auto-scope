@@ -1,142 +1,333 @@
 .page {
-  --background: #fafafa;
-  --foreground: #fff;
-
-  --text-primary: #000;
-  --text-secondary: #666;
-
-  --button-primary-hover: #383838;
-  --button-secondary-hover: #f2f2f2;
-  --button-secondary-border: #ebebeb;
-
-  display: flex;
-  flex: 1;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  font-family: var(--font-geist-sans);
-  background-color: var(--background);
+  width: min(calc(100% - 40px), var(--content-width));
+  margin: 0 auto;
+  padding: 72px 0 88px;
 }
 
-.main {
-  display: flex;
-  flex: 1;
-  width: 100%;
-  max-width: 800px;
-  flex-direction: column;
-  align-items: flex-start;
-  justify-content: space-between;
-  background-color: var(--foreground);
-  padding: 120px 60px;
+.hero {
+  position: relative;
+  min-height: 560px;
+  display: grid;
+  grid-template-columns: minmax(0, 1.05fr) minmax(360px, 0.95fr);
+  align-items: center;
+  gap: clamp(48px, 8vw, 104px);
+}
+
+.hero::before {
+  position: absolute;
+  inset: 4% -18% auto auto;
+  width: 520px;
+  height: 520px;
+  border: 1px solid rgba(78, 157, 255, 0.08);
+  border-radius: 50%;
+  content: "";
+  pointer-events: none;
+}
+
+.heroContent {
+  position: relative;
+  z-index: 1;
+}
+
+.eyebrow {
+  margin-bottom: 18px;
+  color: var(--accent-strong);
+  font-size: 0.75rem;
+  font-weight: 750;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+}
+
+.hero h1 {
+  max-width: 720px;
+  font-size: clamp(3rem, 6.4vw, 5.8rem);
+  font-weight: 670;
+  line-height: 0.99;
+  letter-spacing: -0.065em;
+  text-wrap: balance;
 }
 
 .intro {
+  max-width: 610px;
+  margin-top: 28px;
+  color: var(--text-soft);
+  font-size: clamp(1rem, 1.8vw, 1.18rem);
+  line-height: 1.75;
+}
+
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: 36px;
+}
+
+.primaryAction,
+.secondaryAction {
+  min-height: 48px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 20px;
+  border: 1px solid transparent;
+  border-radius: 12px;
+  padding: 0 20px;
+  font-size: 0.92rem;
+  font-weight: 680;
+  transition: transform 180ms ease, background-color 180ms ease, border-color 180ms ease;
+}
+
+.primaryAction {
+  color: #06101c;
+  background: var(--accent-strong);
+  box-shadow: 0 14px 34px rgba(43, 125, 225, 0.22);
+}
+
+.secondaryAction {
+  border-color: var(--border-strong);
+  color: var(--foreground);
+  background: rgba(255, 255, 255, 0.025);
+}
+
+.primaryAction:hover,
+.secondaryAction:hover {
+  transform: translateY(-2px);
+}
+
+.primaryAction:hover {
+  background: #96c6ff;
+}
+
+.secondaryAction:hover {
+  border-color: rgba(114, 178, 255, 0.42);
+  background: var(--accent-soft);
+}
+
+.instrument {
+  position: relative;
+  min-height: 420px;
+  overflow: hidden;
+  border: 1px solid var(--border-strong);
+  border-radius: 28px;
+  padding: 28px;
+  background:
+    linear-gradient(135deg, rgba(255, 255, 255, 0.065), transparent 46%),
+    linear-gradient(155deg, #172335, #0b111a 68%);
+  box-shadow: var(--shadow), inset 0 1px rgba(255, 255, 255, 0.08);
+}
+
+.instrument::after {
+  position: absolute;
+  inset: 74px auto auto 50%;
+  width: 250px;
+  height: 250px;
+  border: 1px solid rgba(114, 178, 255, 0.14);
+  border-radius: 50%;
+  box-shadow: 0 0 0 28px rgba(114, 178, 255, 0.025), 0 0 0 58px rgba(114, 178, 255, 0.018);
+  content: "";
+  transform: translateX(-50%);
+}
+
+.instrumentTop {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  color: var(--muted);
+  font-family: var(--font-geist-mono), monospace;
+  font-size: 0.69rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.status {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  color: var(--success);
+}
+
+.status::before {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: currentColor;
+  box-shadow: 0 0 12px currentColor;
+  content: "";
+}
+
+.dial {
+  position: relative;
+  z-index: 1;
+  min-height: 290px;
   display: flex;
   flex-direction: column;
-  align-items: flex-start;
-  text-align: left;
-  gap: 24px;
-}
-
-.intro h1 {
-  max-width: 320px;
-  font-size: 40px;
-  font-weight: 600;
-  line-height: 48px;
-  letter-spacing: -2.4px;
-  text-wrap: balance;
-  color: var(--text-primary);
-}
-
-.intro p {
-  max-width: 440px;
-  font-size: 18px;
-  line-height: 32px;
-  text-wrap: balance;
-  color: var(--text-secondary);
-}
-
-.intro a {
-  font-weight: 500;
-  color: var(--text-primary);
-}
-
-.ctas {
-  display: flex;
-  flex-direction: row;
-  width: 100%;
-  max-width: 440px;
-  gap: 16px;
-  font-size: 14px;
-}
-
-.ctas a {
-  display: flex;
-  justify-content: center;
   align-items: center;
-  height: 40px;
-  padding: 0 16px;
-  border-radius: 128px;
-  border: 1px solid transparent;
-  transition: 0.2s;
-  cursor: pointer;
-  width: fit-content;
-  font-weight: 500;
+  justify-content: center;
 }
 
-a.primary {
-  background: var(--text-primary);
-  color: var(--background);
-  gap: 8px;
+.dialValue {
+  font-family: var(--font-geist-mono), monospace;
+  font-size: clamp(3.3rem, 7vw, 5rem);
+  font-weight: 430;
+  letter-spacing: -0.07em;
 }
 
-a.secondary {
-  border-color: var(--button-secondary-border);
+.dialLabel {
+  margin-top: 5px;
+  color: var(--muted);
+  font-size: 0.72rem;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
 }
 
-/* Enable hover only on non-touch devices */
-@media (hover: hover) and (pointer: fine) {
-  a.primary:hover {
-    background: var(--button-primary-hover);
-    border-color: transparent;
-  }
-
-  a.secondary:hover {
-    background: var(--button-secondary-hover);
-    border-color: transparent;
-  }
+.instrumentGrid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  border-top: 1px solid var(--border);
+  padding-top: 18px;
+  color: var(--text-soft);
+  font-size: 0.76rem;
+  letter-spacing: 0.08em;
+  text-align: center;
+  text-transform: uppercase;
 }
 
-@media (max-width: 600px) {
-  .main {
-    padding: 48px 24px;
-  }
-
-  .intro {
-    gap: 16px;
-  }
-
-  .intro h1 {
-    font-size: 32px;
-    line-height: 40px;
-    letter-spacing: -1.92px;
-  }
+.instrumentGrid span + span {
+  border-left: 1px solid var(--border);
 }
 
-@media (prefers-color-scheme: dark) {
-  .logo {
-    filter: invert();
-  }
+.destinations {
+  border-top: 1px solid var(--border);
+  padding-top: 72px;
+}
 
+.sectionHeading h2 {
+  font-size: clamp(2rem, 4vw, 3rem);
+  font-weight: 620;
+  letter-spacing: -0.045em;
+}
+
+.cardGrid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 18px;
+  margin-top: 34px;
+}
+
+.destinationCard {
+  min-height: 230px;
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: end;
+  gap: 24px;
+  border: 1px solid var(--border);
+  border-radius: 22px;
+  padding: 28px;
+  background: linear-gradient(145deg, rgba(255, 255, 255, 0.045), rgba(255, 255, 255, 0.012));
+  transition: transform 180ms ease, border-color 180ms ease, background-color 180ms ease;
+}
+
+.destinationCard:hover {
+  transform: translateY(-4px);
+  border-color: rgba(114, 178, 255, 0.38);
+  background-color: var(--accent-soft);
+}
+
+.cardIndex {
+  align-self: start;
+  color: var(--accent-strong);
+  font-family: var(--font-geist-mono), monospace;
+  font-size: 0.76rem;
+}
+
+.destinationCard h3 {
+  margin-bottom: 10px;
+  font-size: 1.4rem;
+  letter-spacing: -0.03em;
+}
+
+.destinationCard p {
+  max-width: 410px;
+  color: var(--muted);
+  line-height: 1.65;
+}
+
+.cardArrow {
+  color: var(--accent-strong);
+  font-size: 1.4rem;
+}
+
+@media (max-width: 900px) {
   .page {
-    --background: #000;
-    --foreground: #000;
+    padding-top: 48px;
+  }
 
-    --text-primary: #ededed;
-    --text-secondary: #999;
+  .hero {
+    grid-template-columns: 1fr;
+    gap: 54px;
+  }
 
-    --button-primary-hover: #ccc;
-    --button-secondary-hover: #1a1a1a;
-    --button-secondary-border: #1a1a1a;
+  .instrument {
+    width: 100%;
+    max-width: 620px;
+  }
+}
+
+@media (max-width: 680px) {
+  .page {
+    width: min(calc(100% - 28px), var(--content-width));
+    padding: 42px 0 64px;
+  }
+
+  .hero {
+    min-height: auto;
+  }
+
+  .hero h1 {
+    font-size: clamp(2.65rem, 13vw, 4.2rem);
+  }
+
+  .instrument {
+    min-height: 350px;
+    border-radius: 20px;
+    padding: 22px;
+  }
+
+  .dial {
+    min-height: 238px;
+  }
+
+  .instrument::after {
+    top: 58px;
+    width: 210px;
+    height: 210px;
+  }
+
+  .destinations {
+    margin-top: 72px;
+    padding-top: 54px;
+  }
+
+  .cardGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .destinationCard {
+    min-height: 210px;
+    padding: 24px;
+  }
+}
+
+@media (max-width: 420px) {
+  .actions a {
+    width: 100%;
+  }
+
+  .instrumentTop {
+    flex-direction: column;
+  }
+
+  .instrumentGrid {
+    font-size: 0.65rem;
   }
 }

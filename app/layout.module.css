@@ -1,0 +1,13 @@
+.header {
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  border-bottom: 1px solid var(--border);
+  background: rgba(7, 10, 15, 0.82);
+  backdrop-filter: blur(18px);
+}
+
+.main {
+  flex: 1;
+  width: 100%;
+}

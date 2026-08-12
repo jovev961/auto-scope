@@ -1,0 +1,77 @@
+.nav {
+  width: min(calc(100% - 40px), var(--content-width));
+  min-height: 72px;
+  margin: 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 32px;
+}
+
+.brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 11px;
+  color: var(--foreground);
+  font-size: 0.98rem;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+}
+
+.brandMark {
+  width: 34px;
+  height: 34px;
+  display: grid;
+  place-items: center;
+  border: 1px solid rgba(114, 178, 255, 0.46);
+  border-radius: 10px;
+  color: #ffffff;
+  background: linear-gradient(145deg, #2875d3, #12345e);
+  box-shadow: inset 0 1px rgba(255, 255, 255, 0.17), 0 8px 24px rgba(20, 84, 160, 0.28);
+  font-size: 0.7rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+}
+
+.links {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.links a {
+  border: 1px solid transparent;
+  border-radius: 10px;
+  padding: 9px 13px;
+  color: var(--text-soft);
+  font-size: 0.9rem;
+  font-weight: 550;
+  transition: color 160ms ease, background-color 160ms ease, border-color 160ms ease;
+}
+
+.links a:hover {
+  border-color: var(--border);
+  color: var(--foreground);
+  background: rgba(255, 255, 255, 0.045);
+}
+
+@media (max-width: 560px) {
+  .nav {
+    width: min(calc(100% - 28px), var(--content-width));
+    min-height: 64px;
+    gap: 16px;
+  }
+
+  .brand > span:last-child {
+    display: none;
+  }
+
+  .links {
+    gap: 0;
+  }
+
+  .links a {
+    padding: 8px 9px;
+    font-size: 0.82rem;
+  }
+}

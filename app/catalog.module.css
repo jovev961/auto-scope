@@ -1,0 +1,14 @@
+.page {
+  width: min(calc(100% - 40px), var(--content-width));
+  min-height: calc(100vh - 72px);
+  margin: 0 auto;
+  padding: 64px 0 88px;
+}
+
+@media (max-width: 680px) {
+  .page {
+    width: min(calc(100% - 28px), var(--content-width));
+    min-height: calc(100vh - 64px);
+    padding: 42px 0 64px;
+  }
+}
