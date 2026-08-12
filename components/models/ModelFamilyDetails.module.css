@@ -30,6 +30,16 @@
   text-transform: uppercase;
 }
 
+.brandRow {
+  display: flex;
+  align-items: center;
+  gap: clamp(20px, 4vw, 34px);
+}
+
+.brandCopy {
+  min-width: 0;
+}
+
 .hero h1 {
   margin-top: 12px;
   font-size: clamp(2.8rem, 7vw, 5.8rem);
@@ -213,6 +223,11 @@
 }
 
 @media (max-width: 580px) {
+  .brandRow {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
   .titleRow,
   .generationTitle {
     align-items: flex-start;

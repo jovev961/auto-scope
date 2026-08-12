@@ -3,6 +3,8 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { getAllEnginesForAutoId, getAutoById } from "@/lib/autos";
+import BrandLogo from "@/components/brand/BrandLogo";
+import useBrand from "@/components/brand/useBrand";
 import styles from "./EngineSelection.module.css";
 
 export default function EngineSelection({ autoId }) {
@@ -46,6 +48,7 @@ export default function EngineSelection({ autoId }) {
   const currentRequestKey = `${autoId}|${retryKey}`;
   const isLoading = requestState.key !== currentRequestKey;
   const auto = isLoading ? null : requestState.auto;
+  const brand = useBrand(auto?.brandId);
   const engines = isLoading ? [] : requestState.engines;
   const error = isLoading ? null : requestState.error;
 
@@ -80,8 +83,13 @@ export default function EngineSelection({ autoId }) {
   return (
     <section className={styles.selection}>
       <header className={styles.hero}>
-        <p className={styles.eyebrow}>Choose your configuration</p>
-        <h1>{auto?.displayName ?? auto?.name}</h1>
+        <div className={styles.brandRow}>
+          {brand && <BrandLogo brand={brand} variant="hero" />}
+          <div>
+            <p className={styles.eyebrow}>Choose your configuration</p>
+            <h1>{auto?.displayName ?? auto?.name}</h1>
+          </div>
+        </div>
         <p>
           Select an engine to open the complete automobile profile, photo catalogue,
           editorial details, and specifications for that configuration.

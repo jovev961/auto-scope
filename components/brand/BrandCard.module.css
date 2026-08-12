@@ -19,6 +19,7 @@
 }
 
 .label {
+  margin-top: 22px;
   color: var(--muted);
   font-size: 0.66rem;
   font-weight: 700;
@@ -27,7 +28,7 @@
 }
 
 .card h2 {
-  margin-top: 18px;
+  margin-top: 8px;
   font-size: 1.25rem;
   font-weight: 620;
   line-height: 1.25;

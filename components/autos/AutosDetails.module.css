@@ -84,6 +84,16 @@
   text-transform: uppercase;
 }
 
+.brandRow {
+  display: flex;
+  align-items: center;
+  gap: clamp(20px, 4vw, 34px);
+}
+
+.brandRow > div:last-child {
+  min-width: 0;
+}
+
 .backLink {
   display: inline-flex;
   margin-bottom: 42px;
@@ -429,6 +439,11 @@
 }
 
 @media (max-width: 680px) {
+  .brandRow {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
   .statePanel {
     min-height: 320px;
     border-radius: 16px;

@@ -4,6 +4,8 @@ import Image from "next/image";
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { getModelFamily } from "@/lib/modelFamilies";
+import BrandLogo from "@/components/brand/BrandLogo";
+import useBrand from "@/components/brand/useBrand";
 import styles from "./ModelFamilyDetails.module.css";
 
 function formatYearRange(startYear, endYear) {
@@ -13,6 +15,7 @@ function formatYearRange(startYear, endYear) {
 }
 
 export default function ModelFamilyDetails({ brandId, familyKey }) {
+  const brand = useBrand(brandId);
   const [retryKey, setRetryKey] = useState(0);
   const [requestState, setRequestState] = useState({ key: null, family: null, error: null });
 
@@ -64,10 +67,15 @@ export default function ModelFamilyDetails({ brandId, familyKey }) {
     <section className={styles.details}>
       <header className={styles.hero}>
         <Link className={styles.backLink} href={`/brands/${brandId}`}>← Back to model families</Link>
-        <p className={styles.eyebrow}>{family.brandDisplayName} model family</p>
-        <div className={styles.titleRow}>
-          <h1>{family.brandDisplayName} {family.name}</h1>
-          {family.current && <span className={styles.currentBadge}>Current family</span>}
+        <div className={styles.brandRow}>
+          {brand && <BrandLogo brand={brand} variant="hero" />}
+          <div className={styles.brandCopy}>
+            <p className={styles.eyebrow}>{family.brandDisplayName} model family</p>
+            <div className={styles.titleRow}>
+              <h1>{family.brandDisplayName} {family.name}</h1>
+              {family.current && <span className={styles.currentBadge}>Current family</span>}
+            </div>
+          </div>
         </div>
         <p>
           {family.generationCount} {family.generationCount === 1 ? "generation" : "generations"}

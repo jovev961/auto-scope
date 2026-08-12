@@ -7,6 +7,16 @@
   max-width: 900px;
 }
 
+.brandRow {
+  display: flex;
+  align-items: center;
+  gap: clamp(20px, 4vw, 34px);
+}
+
+.brandRow > div:last-child {
+  min-width: 0;
+}
+
 .eyebrow,
 .engineCard p {
   color: var(--accent-strong);
@@ -165,6 +175,11 @@
 }
 
 @media (max-width: 520px) {
+  .brandRow {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
   .engineCard {
     min-height: 170px;
     grid-template-columns: 1fr auto;

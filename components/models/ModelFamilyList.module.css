@@ -7,6 +7,16 @@
   max-width: 790px;
 }
 
+.headingRow {
+  display: flex;
+  align-items: center;
+  gap: clamp(20px, 4vw, 34px);
+}
+
+.headingRow > div:last-child {
+  min-width: 0;
+}
+
 .eyebrow {
   margin-bottom: 14px;
   color: var(--accent-strong);
@@ -181,6 +191,7 @@
 }
 
 @media (max-width: 580px) {
+  .headingRow { align-items: flex-start; flex-direction: column; }
   .controls { align-items: stretch; flex-direction: column; }
   .sortLabel { width: 100%; }
   .grid { grid-template-columns: 1fr; }
