@@ -1,37 +1,128 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Auto Scope
 
-## Getting Started
+Auto Scope is a dark-premium automotive catalogue built with Next.js. It lets users browse manufacturers, move through model families and generations, choose an automobile variant, select an engine configuration, and inspect the complete vehicle profile.
 
-First, run the development server:
+## Catalogue flow
+
+```text
+Brand → Model family → Generation → Automobile variant → Engine → Details
+```
+
+For example:
+
+1. Open the Acura TLX model family at `/brands/2/models/acua-tlx`.
+2. Choose its automobile variant to open `/autos/24`.
+3. Select one of the available engine configurations.
+4. View the complete profile at a route such as `/autos/24/engines/39`.
+
+The final profile includes the selected engine specifications, automobile photo gallery, description, press release, and catalogue timestamps.
+
+## Features
+
+- Browse and search automobile brands.
+- Browse model families globally or filter them by brand.
+- Sort and paginate catalogue results.
+- Explore generations and their automobile variants.
+- Choose an engine before loading the full automobile profile.
+- Share a specific automobile and engine combination through a nested URL.
+- View responsive remote-image galleries with thumbnail navigation.
+- Expand long descriptions and press releases independently.
+- Review engine, transmission, brake, dimension, and weight specifications.
+- Accessible loading, empty, error, and retry states.
+- Responsive dark-premium interface with a sticky shared navigation bar.
+
+## Requirements
+
+- Node.js with npm
+- The Automobile Specifications API running at `http://localhost:8080`
+
+The frontend currently consumes the API directly from `http://localhost:8080/api/v1`. The backend must allow requests from `http://localhost:3000` through its CORS configuration.
+
+API documentation is available while the backend is running:
+
+- Swagger UI: [http://localhost:8080/swagger-ui/index.html](http://localhost:8080/swagger-ui/index.html)
+- OpenAPI JSON: [http://localhost:8080/v3/api-docs](http://localhost:8080/v3/api-docs)
+
+## Getting started
+
+Install the dependencies:
+
+```bash
+npm install
+```
+
+Start the Automobile Specifications API on port `8080`, then run the frontend:
 
 ```bash
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Open [http://localhost:3000](http://localhost:3000).
 
-You can start editing the page by modifying `app/page.js`. The page auto-updates as you edit the file.
+## Routes
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+| Route | Purpose |
+| --- | --- |
+| `/` | Auto Scope landing page |
+| `/brands` | Searchable and sortable manufacturer directory |
+| `/brands/[id]` | Model families for one manufacturer |
+| `/brands/[id]/models/[familyKey]` | Generations and automobile variants for a model family |
+| `/autos` | Global model-family directory |
+| `/autos/[id]` | Engine-selection view for an automobile variant |
+| `/autos/[id]/engines/[engineId]` | Full automobile profile for the selected engine |
 
-## Learn More
+## API endpoints used
 
-To learn more about Next.js, take a look at the following resources:
+The main frontend requests are:
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+```text
+GET /api/v1/brands
+GET /api/v1/brands/{id}
+GET /api/v1/model-families
+GET /api/v1/brands/{brandId}/model-families/{familyKey}
+GET /api/v1/automobiles/{id}
+GET /api/v1/automobiles/{automobileId}/engines
+GET /api/v1/engines/{id}
+```
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+Collection endpoints support the API's pagination, name filtering, and whitelisted sorting parameters.
 
-## Deploy on Vercel
+## Project structure
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+```text
+app/                  App Router pages and shared layout
+components/brand/     Brand directory components
+components/models/    Model-family, generation, and variant components
+components/autos/     Engine selection and automobile detail components
+lib/                  Automobile Specifications API client functions
+public/               Static assets
+```
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
-# auto-scope
+The application uses CSS Modules for component styling, `next/image` for optimized remote automobile images, and Geist fonts through `next/font`.
+
+## Available scripts
+
+```bash
+npm run dev       # Start the development server
+npm run build     # Create a production build
+npm run start     # Start the production server
+npm run lint      # Run ESLint
+```
+
+Before handing off changes, run:
+
+```bash
+npm run lint
+npm run build
+git diff --check
+```
+
+`npm run build` requires network access when the configured Geist fonts are not already cached.
+
+## Technology
+
+- Next.js 16 App Router
+- React 19
+- JavaScript and JSX
+- CSS Modules
+- Automobile Specifications REST API
