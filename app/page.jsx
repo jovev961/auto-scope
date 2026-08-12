@@ -14,7 +14,7 @@ export default function Home() {
           </p>
           <div className={styles.actions}>
             <Link className={styles.primaryAction} href="/autos">
-              Explore model families <span aria-hidden="true">→</span>
+              Explore all cars <span aria-hidden="true">→</span>
             </Link>
             <Link className={styles.secondaryAction} href="/brands">
               Browse brands
@@ -55,6 +55,14 @@ export default function Home() {
           </Link>
           <Link className={styles.destinationCard} href="/autos">
             <span className={styles.cardIndex}>02</span>
+            <div>
+              <h3>Explore all cars</h3>
+              <p>Search every automobile variant and open its photos, engines, and full specifications.</p>
+            </div>
+            <span className={styles.cardArrow} aria-hidden="true">↗</span>
+          </Link>
+          <Link className={styles.destinationCard} href="/models">
+            <span className={styles.cardIndex}>03</span>
             <div>
               <h3>Explore model families</h3>
               <p>Search every family, compare generations, and open detailed variant specifications.</p>

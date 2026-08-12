@@ -11,7 +11,8 @@ export default function Nav() {
       <div className={styles.links}>
         <Link href="/">Home</Link>
         <Link href="/brands">Brands</Link>
-        <Link href="/autos">Model families</Link>
+        <Link href="/models">Models</Link>
+        <Link href="/autos">All cars</Link>
       </div>
     </nav>
   );

@@ -1,10 +1,10 @@
-import ModelFamilyList from "@/components/models/ModelFamilyList";
+import AutosList from "@/components/autos/AutosList";
 import styles from "@/app/catalog.module.css";
 
 export default function AutosPage() {
   return (
     <div className={styles.page}>
-      <ModelFamilyList />
+      <AutosList />
     </div>
   );
 }
