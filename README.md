@@ -21,6 +21,7 @@ The final profile includes the selected engine specifications, automobile photo 
 
 - Browse and search automobile brands.
 - Browse model families globally or filter them by brand.
+- Browse all automobile variants in one searchable directory.
 - Sort and paginate catalogue results.
 - Explore generations and their automobile variants.
 - Choose an engine before loading the full automobile profile.
@@ -67,7 +68,8 @@ Open [http://localhost:3000](http://localhost:3000).
 | `/brands` | Searchable and sortable manufacturer directory |
 | `/brands/[id]` | Model families for one manufacturer |
 | `/brands/[id]/models/[familyKey]` | Generations and automobile variants for a model family |
-| `/autos` | Global model-family directory |
+| `/models` | Global model-family directory |
+| `/autos` | Searchable directory of all automobile variants |
 | `/autos/[id]` | Engine-selection view for an automobile variant |
 | `/autos/[id]/engines/[engineId]` | Full automobile profile for the selected engine |
 
@@ -80,6 +82,7 @@ GET /api/v1/brands
 GET /api/v1/brands/{id}
 GET /api/v1/model-families
 GET /api/v1/brands/{brandId}/model-families/{familyKey}
+GET /api/v1/automobiles
 GET /api/v1/automobiles/{id}
 GET /api/v1/automobiles/{automobileId}/engines
 GET /api/v1/engines/{id}

@@ -59,7 +59,7 @@
   .nav {
     width: min(calc(100% - 28px), var(--content-width));
     min-height: 64px;
-    gap: 16px;
+    gap: 10px;
   }
 
   .brand > span:last-child {
@@ -71,7 +71,7 @@
   }
 
   .links a {
-    padding: 8px 9px;
-    font-size: 0.82rem;
+    padding: 8px 7px;
+    font-size: 0.78rem;
   }
 }
