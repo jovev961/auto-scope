@@ -2,6 +2,8 @@
 
 import { getAutoById } from "@/lib/autos";
 import { getEngineById } from "@/lib/engines";
+import BrandLogo from "@/components/brand/BrandLogo";
+import useBrand from "@/components/brand/useBrand";
 import Image from "next/image";
 import Link from "next/link";
 import { useState, useEffect, useRef } from "react";
@@ -119,6 +121,7 @@ useEffect(() => {
 }, [autoId, engineId, retryKey]);
 
   const autoPhotos = auto.photos ?? [];
+  const brand = useBrand(auto.brandId);
   const engineSpecs = engine?.specs ?? {};
 
   useEffect(() => {
@@ -194,8 +197,13 @@ useEffect(() => {
       <Link className={styles.backLink} href={`/autos/${autoId}`}>
         ← Choose another engine
       </Link>
-      <p className={styles.title}>Selected automobile</p>
-      <h1 className={styles.autoName}>{auto.displayName ?? auto.name}</h1>
+      <div className={styles.brandRow}>
+        {brand && <BrandLogo brand={brand} variant="hero" />}
+        <div>
+          <p className={styles.title}>Selected automobile</p>
+          <h1 className={styles.autoName}>{auto.displayName ?? auto.name}</h1>
+        </div>
+      </div>
       <div className={styles.selectionMeta}>
         <span className={styles.identifier}>Automobile {auto.id}</span>
         <span className={styles.selectedEngineName}>{engine?.displayName ?? engine?.name}</span>

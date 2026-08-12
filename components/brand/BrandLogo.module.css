@@ -1,0 +1,54 @@
+.badge {
+  position: relative;
+  display: grid;
+  flex: 0 0 auto;
+  overflow: hidden;
+  place-items: center;
+  border: 1px solid rgba(255, 255, 255, 0.78);
+  border-radius: 15px;
+  background: linear-gradient(145deg, #ffffff, #e9eef5);
+  box-shadow: 0 14px 34px rgba(0, 0, 0, 0.2);
+}
+
+.card {
+  width: 104px;
+  height: 68px;
+}
+
+.hero {
+  width: 144px;
+  height: 92px;
+  border-radius: 18px;
+}
+
+.image {
+  object-fit: contain;
+  padding: 12px;
+}
+
+.hero .image {
+  padding: 16px;
+}
+
+.fallback {
+  color: #17202c;
+  font-size: 1.15rem;
+  font-weight: 780;
+  letter-spacing: -0.04em;
+}
+
+.hero .fallback {
+  font-size: 1.45rem;
+}
+
+@media (max-width: 580px) {
+  .hero {
+    width: 116px;
+    height: 76px;
+    border-radius: 15px;
+  }
+
+  .hero .image {
+    padding: 13px;
+  }
+}

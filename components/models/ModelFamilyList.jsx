@@ -3,6 +3,8 @@
 import { useEffect, useState } from "react";
 import { getModelFamilies } from "@/lib/modelFamilies";
 import ModelFamilyCard from "./ModelFamilyCard";
+import BrandLogo from "@/components/brand/BrandLogo";
+import useBrand from "@/components/brand/useBrand";
 import styles from "./ModelFamilyList.module.css";
 
 const SORT_OPTIONS = [
@@ -14,6 +16,7 @@ const SORT_OPTIONS = [
 ];
 
 export default function ModelFamilyList({ brandId }) {
+  const brand = useBrand(brandId);
   const [page, setPage] = useState(0);
   const [sort, setSort] = useState("name,asc");
   const [search, setSearch] = useState("");
@@ -70,8 +73,13 @@ export default function ModelFamilyList({ brandId }) {
   return (
     <section className={styles.list}>
       <div className={styles.heading}>
-        <p className={styles.eyebrow}>{brandId ? "Brand catalogue" : "Family directory"}</p>
-        <h1>{brandId ? "Explore model families" : "Explore all model families"}</h1>
+        <div className={styles.headingRow}>
+          {brand && <BrandLogo brand={brand} variant="hero" />}
+          <div>
+            <p className={styles.eyebrow}>{brandId ? "Brand catalogue" : "Family directory"}</p>
+            <h1>{brandId ? "Explore model families" : "Explore all model families"}</h1>
+          </div>
+        </div>
         <p>
           Browse one card per model family, then open it to compare its generations, years, and body variants.
         </p>
