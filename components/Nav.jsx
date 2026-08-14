@@ -13,6 +13,7 @@ export default function Nav() {
         <Link href="/brands">Brands</Link>
         <Link href="/models">Models</Link>
         <Link href="/autos">All cars</Link>
+        <Link href="/compare">Compare</Link>
       </div>
     </nav>
   );

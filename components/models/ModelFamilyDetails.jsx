@@ -70,11 +70,11 @@ export default function ModelFamilyDetails({ brandId, familyKey }) {
         <div className={styles.brandRow}>
           {brand && <BrandLogo brand={brand} variant="hero" />}
           <div className={styles.brandCopy}>
-            <p className={styles.eyebrow}>{family.brandDisplayName} model family</p>
-            <div className={styles.titleRow}>
-              <h1>{family.brandDisplayName} {family.name}</h1>
-              {family.current && <span className={styles.currentBadge}>Current family</span>}
+            <div className={styles.eyebrowRow}>
+              <p className={styles.eyebrow}>{family.brandDisplayName} model family</p>
+              {family.current && <span className={styles.currentBadge}>Current model</span>}
             </div>
+            <h1>{family.brandDisplayName} {family.name}</h1>
           </div>
         </div>
         <p>

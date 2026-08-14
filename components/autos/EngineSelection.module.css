@@ -29,10 +29,14 @@
 .hero h1,
 .statePanel h1 {
   margin-top: 12px;
-  font-size: clamp(2.8rem, 7vw, 5.8rem);
   font-weight: 650;
-  line-height: 0.98;
-  letter-spacing: -0.065em;
+  line-height: 1.04;
+  letter-spacing: -0.05em;
+}
+
+.hero h1 {
+  overflow-wrap: anywhere;
+  font-size: clamp(2rem, 4vw, 3.35rem);
 }
 
 .hero > p:last-child,
