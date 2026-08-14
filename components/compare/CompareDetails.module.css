@@ -1,0 +1,289 @@
+.compare {
+  width: min(calc(100% - 40px), var(--content-width));
+  min-height: calc(100vh - 72px);
+  margin: 0 auto;
+  padding: 64px 0 88px;
+}
+
+.hero {
+  max-width: 760px;
+}
+
+.eyebrow {
+  color: var(--accent-strong);
+  font-size: 0.72rem;
+  font-weight: 750;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+}
+
+.hero h1,
+.statePanel h1 {
+  margin-top: 12px;
+  font-size: clamp(2.2rem, 5vw, 4.2rem);
+  font-weight: 650;
+  line-height: 1.02;
+  letter-spacing: -0.055em;
+}
+
+.hero > p:last-child,
+.statePanel > p:last-of-type {
+  margin-top: 20px;
+  color: var(--text-soft);
+  line-height: 1.7;
+}
+
+.slotGrid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 16px;
+  margin-top: 44px;
+}
+
+.slot {
+  min-width: 0;
+  display: grid;
+  align-content: start;
+  gap: 8px;
+  border: 1px solid var(--border);
+  border-radius: 18px;
+  padding: 18px;
+  background: var(--surface);
+}
+
+.slot legend {
+  padding: 0 8px;
+  color: var(--foreground);
+  font-size: 0.84rem;
+  font-weight: 700;
+}
+
+.slot label {
+  margin-top: 8px;
+  color: var(--text-soft);
+  font-size: 0.76rem;
+  font-weight: 650;
+}
+
+.slot select {
+  width: 100%;
+  min-height: 44px;
+  border: 1px solid var(--border-strong);
+  border-radius: 10px;
+  padding: 0 36px 0 12px;
+  color: var(--foreground);
+  background: var(--background-elevated);
+}
+
+.slot select:disabled {
+  color: var(--muted);
+  cursor: not-allowed;
+  opacity: 0.68;
+}
+
+.slotStatus {
+  min-height: 32px;
+  margin-top: 8px;
+}
+
+.loadingStatus,
+.readyStatus {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--muted);
+  font-size: 0.75rem;
+}
+
+.loadingStatus span {
+  width: 12px;
+  height: 12px;
+  border: 2px solid rgba(114, 178, 255, 0.24);
+  border-top-color: var(--accent-strong);
+  border-radius: 50%;
+  animation: loadingSpin 700ms linear infinite;
+}
+
+.readyStatus {
+  color: var(--success);
+}
+
+.slotError {
+  display: grid;
+  gap: 10px;
+  color: #ffaca7;
+  font-size: 0.76rem;
+  line-height: 1.45;
+}
+
+.slotError button,
+.statePanel button {
+  justify-self: start;
+  min-height: 38px;
+  border: 1px solid rgba(114, 178, 255, 0.42);
+  border-radius: 9px;
+  padding: 0 14px;
+  color: var(--foreground);
+  background: var(--accent-soft);
+  cursor: pointer;
+  font-weight: 650;
+}
+
+.emptyState,
+.statePanel {
+  margin-top: 42px;
+  border: 1px dashed var(--border-strong);
+  border-radius: 18px;
+  padding: clamp(28px, 5vw, 48px);
+  color: var(--text-soft);
+  background: rgba(255, 255, 255, 0.018);
+}
+
+.emptyState h2,
+.emptyState h3 {
+  color: var(--foreground);
+  font-size: clamp(1.35rem, 3vw, 2rem);
+  letter-spacing: -0.035em;
+}
+
+.emptyState p {
+  margin-top: 10px;
+  line-height: 1.6;
+}
+
+.statePanel {
+  min-height: 320px;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: center;
+  margin-top: 0;
+}
+
+.statePanel button {
+  margin-top: 24px;
+}
+
+.results {
+  margin-top: 58px;
+}
+
+.resultsHeading h2 {
+  margin-top: 8px;
+  font-size: clamp(1.8rem, 4vw, 2.8rem);
+  letter-spacing: -0.045em;
+}
+
+.tableScroll {
+  overflow-x: auto;
+  margin-top: 24px;
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  background: var(--surface);
+}
+
+.tableScroll table {
+  width: 100%;
+  min-width: 720px;
+  border-collapse: collapse;
+}
+
+.tableScroll th,
+.tableScroll td {
+  min-width: 180px;
+  border-right: 1px solid var(--border);
+  border-bottom: 1px solid var(--border);
+  padding: 14px 16px;
+  text-align: left;
+  vertical-align: top;
+}
+
+.tableScroll tr > *:last-child {
+  border-right: 0;
+}
+
+.tableScroll tbody tr:last-child > * {
+  border-bottom: 0;
+}
+
+.tableScroll thead th {
+  color: var(--foreground);
+  background: var(--background-elevated);
+}
+
+.tableScroll thead th:first-child,
+.tableScroll tbody tr:not(.groupRow) th {
+  min-width: 190px;
+}
+
+.tableScroll thead span,
+.tableScroll thead small {
+  display: block;
+  color: var(--muted);
+  font-size: 0.68rem;
+  font-weight: 650;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.tableScroll thead strong {
+  display: block;
+  margin: 7px 0 5px;
+  line-height: 1.3;
+}
+
+.tableScroll tbody th {
+  color: var(--text-soft);
+  font-size: 0.82rem;
+  font-weight: 650;
+  background: rgba(255, 255, 255, 0.015);
+}
+
+.tableScroll td {
+  color: var(--foreground);
+  font-family: var(--font-geist-mono), monospace;
+  font-size: 0.78rem;
+  line-height: 1.5;
+}
+
+.groupRow th {
+  padding: 11px 16px;
+  color: var(--accent-strong);
+  background: rgba(78, 157, 255, 0.09);
+  font-size: 0.7rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+@keyframes loadingSpin {
+  to { transform: rotate(360deg); }
+}
+
+@media (max-width: 900px) {
+  .slotGrid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 680px) {
+  .compare {
+    width: min(calc(100% - 28px), var(--content-width));
+    min-height: calc(100vh - 64px);
+    padding: 42px 0 64px;
+  }
+
+  .hero h1,
+  .statePanel h1 {
+    font-size: clamp(2rem, 12vw, 3.2rem);
+  }
+
+  .results {
+    margin-top: 44px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .loadingStatus span {
+    animation: none;
+  }
+}

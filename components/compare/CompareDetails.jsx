@@ -1,297 +1,637 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import {getAllBrandsList } from "@/lib/brands";
-import { getAllAutosForBrandAndFamily, getAllModelFamilies, getAllModelFamiliesForBrand } from "@/lib/modelFamilies";
+import { useEffect, useRef, useState } from "react";
+import { getAllBrandsList } from "@/lib/brands";
+import {
+  getAllAutosForBrandAndFamily,
+  getAllModelFamiliesForBrand,
+} from "@/lib/modelFamilies";
 import { getAllEnginesForAutoIdList, getAutoById } from "@/lib/autos";
 import { getEngineById } from "@/lib/engines";
+import styles from "./CompareDetails.module.css";
 
-export default function CompareDetails({preSelectedAuto}) {
+const SLOT_COUNT = 3;
+const REQUEST_STAGES = ["models", "autos", "engines", "details"];
+const SPEC_GROUP_ORDER = [
+  "Engine Specs",
+  "Performance Specs",
+  "Transmission Specs",
+  "Brakes Specs",
+  "Tires Specs",
+  "Dimensions",
+  "Weight Specs",
+  "Fuel Economy",
+];
 
-    const [brands, setBrands] = useState([]);
-    const [models, setModels] = useState({});
-    const [autos, setAutos] = useState({});
-    const [engines, setEngines] = useState({});
-    const [details, setDetails] = useState({});
+function createSlot() {
+  return {
+    brandId: "",
+    familyKey: "",
+    autoId: "",
+    engineId: "",
+    models: [],
+    autos: [],
+    engines: [],
+    auto: null,
+    engine: null,
+    loadingStage: null,
+    error: null,
+  };
+}
 
-    const [selectedBrands, setSelectedBrands] = useState({});
-    const [selectedModels, setSelectedModels] = useState({});
-    const [selectedAutos, setSelectedAutos] = useState({});
-    const [selectedEngines, setSelectedEngines] = useState({});
+function isRecord(value) {
+  return value !== null && typeof value === "object" && !Array.isArray(value);
+}
 
-    useEffect(() => {
-        let canceled = false;
-        const fetchBrands = async () => {
-            try {
-                const response = await getAllBrandsList()
-                if(!canceled){
-                    setBrands(response);
-                }
-            } catch (error) {
-                if(!canceled){
-                    console.error(error);
-                }
-            }
-        };
-        fetchBrands();
-        return () => {
-            canceled = true;
+function getErrorMessage(error, fallbackMessage) {
+  return error instanceof Error && error.message ? error.message : fallbackMessage;
+}
+
+function getOptionName(option) {
+  return option.displayName ?? option.name;
+}
+
+function getSpecValue(engine, groupName, fieldName) {
+  const group = engine?.specs?.[groupName];
+  const value = isRecord(group) ? group[fieldName] : fieldName === "Value" ? group : undefined;
+
+  if (value === undefined || value === null || value === "") {
+    return "—";
+  }
+
+  if (Array.isArray(value)) {
+    return value.length > 0 ? value.join(", ") : "—";
+  }
+
+  return isRecord(value) ? JSON.stringify(value) : String(value);
+}
+
+function buildSpecificationGroups(completedSlots) {
+  const fieldsByGroup = new Map();
+
+  completedSlots.forEach(({ slot }) => {
+    const specs = isRecord(slot.engine?.specs) ? slot.engine.specs : {};
+
+    Object.entries(specs).forEach(([groupName, groupValue]) => {
+      const fields = fieldsByGroup.get(groupName) ?? [];
+      const incomingFields = isRecord(groupValue) ? Object.keys(groupValue) : ["Value"];
+
+      incomingFields.forEach((fieldName) => {
+        if (!fields.includes(fieldName)) {
+          fields.push(fieldName);
         }
-    },[])
+      });
 
-    useEffect(() => {
-        const fetchModels = async() => {
-            for (let index = 1; index < 4; index++) {
-                const select = `select${index}`
-                const selectBrand = `select${index}Brand`
-                if(selectedBrands[select] && (!models[selectBrand] || models[selectBrand] !== selectedBrands[select])){
-                    if(models[selectBrand] !== selectedBrands[select]){
-                        setSelectedModels((prev) => ({...prev, [select]:null}))
-                        setSelectedAutos((prev) => ({...prev, [select]:null}))
-                        setDetails((prev) => ({...prev, [`${select}Auto`]:null, [`${select}Engine`]:null}))
-                    }
-                    const response = await getAllModelFamiliesForBrand(selectedBrands[select], {})
-                    console.log(response)
-                    setModels((prev) => ({...prev, [select]:response, [selectBrand]:selectedBrands[select]}))
-                }
-            }
+      fieldsByGroup.set(groupName, fields);
+    });
+  });
+
+  const priority = new Map(SPEC_GROUP_ORDER.map((groupName, index) => [groupName, index]));
+
+  return Array.from(fieldsByGroup, ([name, fields]) => ({ name, fields })).sort((a, b) => {
+    const aPriority = priority.get(a.name) ?? Number.POSITIVE_INFINITY;
+    const bPriority = priority.get(b.name) ?? Number.POSITIVE_INFINITY;
+
+    if (aPriority !== bPriority) {
+      return aPriority - bPriority;
+    }
+
+    return a.name.localeCompare(b.name);
+  });
+}
+
+export default function CompareDetails() {
+  const [brands, setBrands] = useState([]);
+  const [brandsStatus, setBrandsStatus] = useState("loading");
+  const [brandsError, setBrandsError] = useState("");
+  const [brandsRetryKey, setBrandsRetryKey] = useState(0);
+  const [slots, setSlots] = useState(() =>
+    Array.from({ length: SLOT_COUNT }, createSlot),
+  );
+
+  const isMountedRef = useRef(false);
+  const requestVersionsRef = useRef(
+    Array.from({ length: SLOT_COUNT }, () =>
+      Object.fromEntries(REQUEST_STAGES.map((stage) => [stage, 0])),
+    ),
+  );
+
+  useEffect(() => {
+    isMountedRef.current = true;
+
+    return () => {
+      isMountedRef.current = false;
+    };
+  }, []);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    async function fetchBrands() {
+      try {
+        setBrandsStatus("loading");
+        setBrandsError("");
+        const response = await getAllBrandsList({ sort: "name,asc" });
+
+        if (!cancelled) {
+          setBrands(response);
+          setBrandsStatus("success");
         }
-
-        fetchModels();
-    }, [selectedBrands])
-
-    useEffect(() => {
-        const fetchAutos = async() => {
-            for (let index = 1; index < 4; index++) {
-                const select = `select${index}`
-                const selectModel = `select${index}Model`
-                if(selectedModels[select] && (!autos[selectModel] || autos[selectModel] !== selectedModels[select])){
-                    if(autos[selectModel] !== selectedModels[select]){
-                        setSelectedAutos((prev) => ({...prev, [select]:null}))
-                        setDetails((prev) => ({...prev, [`${select}Auto`]:null, [`${select}Engine`]:null}))
-
-                    }
-                    const response = await getAllAutosForBrandAndFamily(selectedBrands[select], selectedModels[select])
-                    console.log(response)
-                    setAutos((prev) => ({...prev, [select]:response, [selectModel]:selectedModels[select]}))
-                }
-            }
+      } catch (error) {
+        if (!cancelled) {
+          setBrands([]);
+          setBrandsError(getErrorMessage(error, "Unable to load automobile brands."));
+          setBrandsStatus("error");
         }
+      }
+    }
 
-        fetchAutos();
-    }, [selectedModels])
+    fetchBrands();
 
-    useEffect(() => {
-        const fetchEngines = async() => {
-            for (let index = 1; index < 4; index++) {
-                const select = `select${index}`
-                const selectAuto = `select${index}Auto`
-                if(selectedAutos[select] && (!engines[selectAuto] || engines[selectAuto] !== selectedAutos[select])){
-                    if(engines[selectAuto] !== selectedAutos[select]){
-                        setDetails((prev) => ({...prev, [`${select}Auto`]:null, [`${select}Engine`]:null}))
+    return () => {
+      cancelled = true;
+    };
+  }, [brandsRetryKey]);
 
-                    }
-                    const response = await getAllEnginesForAutoIdList({"autoId":selectedAutos[select]})
-                    console.log(response)
-                    setEngines((prev) => ({...prev, [select]:response, [selectAuto]:selectedAutos[select]}))
-                }
-            }
-        }
+  function updateSlot(slotIndex, update) {
+    setSlots((currentSlots) =>
+      currentSlots.map((slot, index) =>
+        index === slotIndex ? update(slot) : slot,
+      ),
+    );
+  }
 
-        fetchEngines();
-    }, [selectedAutos])
+  function invalidateRequests(slotIndex, stages = REQUEST_STAGES) {
+    stages.forEach((stage) => {
+      requestVersionsRef.current[slotIndex][stage] += 1;
+    });
+  }
 
-        useEffect(() => {
-        const fetchDetails = async() => {
-            for (let index = 1; index < 4; index++) {
-                const select = `select${index}`
-                const selectEngine = `select${index}Engine`
-                if(selectedEngines[select] && (!details[selectEngine] || details[selectEngine] !== selectedEngines[select])){
-                    Promise.all([
-                          getAutoById(selectedAutos[select]),
-                          getEngineById(selectedEngines[select]),
-                        ])
-                          .then(([auto, engineResponse]) => {
-                                setDetails((prev) => ({...prev, [`${select}Auto`]:auto, [`${select}Engine`]:engineResponse}))
-                                console.log(auto)
-                                console.log(engineResponse)
-                          })
-                          .catch((error) => {
-                            console.log(error)
-                          });
-                }
-            }
-        }
+  function beginRequest(slotIndex, stage) {
+    requestVersionsRef.current[slotIndex][stage] += 1;
+    return requestVersionsRef.current[slotIndex][stage];
+  }
 
-        fetchDetails();
-    }, [selectedEngines])
+  function isCurrentRequest(slotIndex, stage, version) {
+    return (
+      isMountedRef.current &&
+      requestVersionsRef.current[slotIndex][stage] === version
+    );
+  }
+
+  async function loadModels(slotIndex, brandId) {
+    const version = beginRequest(slotIndex, "models");
+    updateSlot(slotIndex, (slot) => ({
+      ...slot,
+      loadingStage: "models",
+      error: null,
+    }));
+
+    try {
+      const response = await getAllModelFamiliesForBrand(brandId, {
+        sort: "name,asc",
+      });
+
+      if (isCurrentRequest(slotIndex, "models", version)) {
+        updateSlot(slotIndex, (slot) => ({
+          ...slot,
+          models: response,
+          loadingStage: null,
+        }));
+      }
+    } catch (error) {
+      if (isCurrentRequest(slotIndex, "models", version)) {
+        updateSlot(slotIndex, (slot) => ({
+          ...slot,
+          models: [],
+          loadingStage: null,
+          error: {
+            stage: "models",
+            message: getErrorMessage(error, "Unable to load models for this brand."),
+          },
+        }));
+      }
+    }
+  }
+
+  async function loadAutos(slotIndex, brandId, familyKey) {
+    const version = beginRequest(slotIndex, "autos");
+    updateSlot(slotIndex, (slot) => ({
+      ...slot,
+      loadingStage: "autos",
+      error: null,
+    }));
+
+    try {
+      const response = await getAllAutosForBrandAndFamily(brandId, familyKey);
+
+      if (isCurrentRequest(slotIndex, "autos", version)) {
+        updateSlot(slotIndex, (slot) => ({
+          ...slot,
+          autos: response,
+          loadingStage: null,
+        }));
+      }
+    } catch (error) {
+      if (isCurrentRequest(slotIndex, "autos", version)) {
+        updateSlot(slotIndex, (slot) => ({
+          ...slot,
+          autos: [],
+          loadingStage: null,
+          error: {
+            stage: "autos",
+            message: getErrorMessage(error, "Unable to load automobiles for this model."),
+          },
+        }));
+      }
+    }
+  }
+
+  async function loadEngines(slotIndex, autoId) {
+    const version = beginRequest(slotIndex, "engines");
+    updateSlot(slotIndex, (slot) => ({
+      ...slot,
+      loadingStage: "engines",
+      error: null,
+    }));
+
+    try {
+      const response = await getAllEnginesForAutoIdList({
+        autoId,
+        sort: "name,asc",
+      });
+
+      if (isCurrentRequest(slotIndex, "engines", version)) {
+        updateSlot(slotIndex, (slot) => ({
+          ...slot,
+          engines: response,
+          loadingStage: null,
+        }));
+      }
+    } catch (error) {
+      if (isCurrentRequest(slotIndex, "engines", version)) {
+        updateSlot(slotIndex, (slot) => ({
+          ...slot,
+          engines: [],
+          loadingStage: null,
+          error: {
+            stage: "engines",
+            message: getErrorMessage(error, "Unable to load engines for this automobile."),
+          },
+        }));
+      }
+    }
+  }
+
+  async function loadDetails(slotIndex, autoId, engineId) {
+    const version = beginRequest(slotIndex, "details");
+    updateSlot(slotIndex, (slot) => ({
+      ...slot,
+      loadingStage: "details",
+      error: null,
+    }));
+
+    try {
+      const [auto, engine] = await Promise.all([
+        getAutoById(autoId),
+        getEngineById(engineId),
+      ]);
+
+      if (String(engine.automobileId) !== String(autoId)) {
+        throw new Error("The selected engine does not belong to this automobile.");
+      }
+
+      if (isCurrentRequest(slotIndex, "details", version)) {
+        updateSlot(slotIndex, (slot) => ({
+          ...slot,
+          auto,
+          engine,
+          loadingStage: null,
+        }));
+      }
+    } catch (error) {
+      if (isCurrentRequest(slotIndex, "details", version)) {
+        updateSlot(slotIndex, (slot) => ({
+          ...slot,
+          auto: null,
+          engine: null,
+          loadingStage: null,
+          error: {
+            stage: "details",
+            message: getErrorMessage(error, "Unable to load the selected comparison details."),
+          },
+        }));
+      }
+    }
+  }
+
+  function handleBrandChange(slotIndex, brandId) {
+    invalidateRequests(slotIndex);
+    updateSlot(slotIndex, () => ({
+      ...createSlot(),
+      brandId,
+    }));
+
+    if (brandId) {
+      loadModels(slotIndex, brandId);
+    }
+  }
+
+  function handleModelChange(slotIndex, brandId, familyKey) {
+    invalidateRequests(slotIndex, ["autos", "engines", "details"]);
+    updateSlot(slotIndex, (slot) => ({
+      ...slot,
+      familyKey,
+      autoId: "",
+      engineId: "",
+      autos: [],
+      engines: [],
+      auto: null,
+      engine: null,
+      loadingStage: null,
+      error: null,
+    }));
+
+    if (familyKey) {
+      loadAutos(slotIndex, brandId, familyKey);
+    }
+  }
+
+  function handleAutoChange(slotIndex, autoId) {
+    invalidateRequests(slotIndex, ["engines", "details"]);
+    updateSlot(slotIndex, (slot) => ({
+      ...slot,
+      autoId,
+      engineId: "",
+      engines: [],
+      auto: null,
+      engine: null,
+      loadingStage: null,
+      error: null,
+    }));
+
+    if (autoId) {
+      loadEngines(slotIndex, autoId);
+    }
+  }
+
+  function handleEngineChange(slotIndex, autoId, engineId) {
+    invalidateRequests(slotIndex, ["details"]);
+    updateSlot(slotIndex, (slot) => ({
+      ...slot,
+      engineId,
+      auto: null,
+      engine: null,
+      loadingStage: null,
+      error: null,
+    }));
+
+    if (engineId) {
+      loadDetails(slotIndex, autoId, engineId);
+    }
+  }
+
+  function retrySlot(slotIndex) {
+    const slot = slots[slotIndex];
+
+    switch (slot.error?.stage) {
+      case "models":
+        loadModels(slotIndex, slot.brandId);
+        break;
+      case "autos":
+        loadAutos(slotIndex, slot.brandId, slot.familyKey);
+        break;
+      case "engines":
+        loadEngines(slotIndex, slot.autoId);
+        break;
+      case "details":
+        loadDetails(slotIndex, slot.autoId, slot.engineId);
+        break;
+      default:
+        break;
+    }
+  }
+
+  const completedSlots = slots
+    .map((slot, index) => ({ slot, index }))
+    .filter(({ slot }) => slot.auto && slot.engine);
+  const specificationGroups = buildSpecificationGroups(completedSlots);
+
+  if (brandsStatus === "error") {
+    return (
+      <main className={styles.compare}>
+        <section className={styles.statePanel} role="alert">
+          <p className={styles.eyebrow}>Vehicle comparison</p>
+          <h1>Brands are unavailable</h1>
+          <p>{brandsError}</p>
+          <button
+            type="button"
+            onClick={() => setBrandsRetryKey((currentKey) => currentKey + 1)}
+          >
+            Try again
+          </button>
+        </section>
+      </main>
+    );
+  }
 
   return (
-    <div>
-        {brands &&
-        <div>
-            {Array.from({ length: 3 }, (_, index) => (
-                <select key={index} size={brands.length >= 10 ? 10 : brands.length + 1} onChange={(e) => {setSelectedBrands((prev) => ({...prev, [`select${index+1}`]:e.target.value}))}}>
-                    <option value={null}>Select Brand</option>
-                    {brands.map((brand) => (
-                        <option value={brand.id} key={brand.id}>{brand.name}</option>
+    <main className={styles.compare}>
+      <header className={styles.hero}>
+        <p className={styles.eyebrow}>Vehicle comparison</p>
+        <h1>Compare engines side by side</h1>
+        <p>
+          Build up to three automobile selections, then review every available
+          engine specification in one aligned table.
+        </p>
+      </header>
+
+      <section className={styles.slotGrid} aria-label="Comparison selections">
+        {slots.map((slot, slotIndex) => {
+          const slotNumber = slotIndex + 1;
+          const loadingLabel = slot.loadingStage
+            ? `Loading ${slot.loadingStage === "details" ? "comparison details" : slot.loadingStage}`
+            : "";
+
+          return (
+            <fieldset
+              className={styles.slot}
+              key={slotNumber}
+              aria-busy={Boolean(slot.loadingStage)}
+            >
+              <legend>Vehicle {slotNumber}</legend>
+
+              <label htmlFor={`compare-brand-${slotNumber}`}>Brand</label>
+              <select
+                id={`compare-brand-${slotNumber}`}
+                value={slot.brandId}
+                disabled={brandsStatus === "loading"}
+                onChange={(event) =>
+                  handleBrandChange(slotIndex, event.target.value)
+                }
+              >
+                <option value="">
+                  {brandsStatus === "loading" ? "Loading brands…" : "Select brand"}
+                </option>
+                {brands.map((brand) => (
+                  <option value={brand.id} key={brand.id}>
+                    {getOptionName(brand)}
+                  </option>
+                ))}
+              </select>
+
+              <label htmlFor={`compare-model-${slotNumber}`}>Model</label>
+              <select
+                id={`compare-model-${slotNumber}`}
+                value={slot.familyKey}
+                disabled={!slot.brandId || slot.loadingStage === "models"}
+                onChange={(event) =>
+                  handleModelChange(slotIndex, slot.brandId, event.target.value)
+                }
+              >
+                <option value="">
+                  {slot.loadingStage === "models" ? "Loading models…" : "Select model"}
+                </option>
+                {slot.models.map((model) => (
+                  <option value={model.familyKey} key={model.familyKey}>
+                    {getOptionName(model)}
+                  </option>
+                ))}
+              </select>
+
+              <label htmlFor={`compare-auto-${slotNumber}`}>Automobile</label>
+              <select
+                id={`compare-auto-${slotNumber}`}
+                value={slot.autoId}
+                disabled={!slot.familyKey || slot.loadingStage === "autos"}
+                onChange={(event) =>
+                  handleAutoChange(slotIndex, event.target.value)
+                }
+              >
+                <option value="">
+                  {slot.loadingStage === "autos" ? "Loading automobiles…" : "Select automobile"}
+                </option>
+                {slot.autos.map((auto) => (
+                  <option value={auto.id} key={auto.id}>
+                    {getOptionName(auto)}
+                  </option>
+                ))}
+              </select>
+
+              <label htmlFor={`compare-engine-${slotNumber}`}>Engine</label>
+              <select
+                id={`compare-engine-${slotNumber}`}
+                value={slot.engineId}
+                disabled={!slot.autoId || slot.loadingStage === "engines"}
+                onChange={(event) =>
+                  handleEngineChange(slotIndex, slot.autoId, event.target.value)
+                }
+              >
+                <option value="">
+                  {slot.loadingStage === "engines" ? "Loading engines…" : "Select engine"}
+                </option>
+                {slot.engines.map((engine) => (
+                  <option value={engine.id} key={engine.id}>
+                    {getOptionName(engine)}
+                  </option>
+                ))}
+              </select>
+
+              <div className={styles.slotStatus} aria-live="polite">
+                {slot.loadingStage && (
+                  <p className={styles.loadingStatus}>
+                    <span aria-hidden="true" />
+                    {loadingLabel}
+                  </p>
+                )}
+                {slot.error && (
+                  <div className={styles.slotError} role="alert">
+                    <p>{slot.error.message}</p>
+                    <button type="button" onClick={() => retrySlot(slotIndex)}>
+                      Retry
+                    </button>
+                  </div>
+                )}
+                {slot.auto && slot.engine && !slot.loadingStage && !slot.error && (
+                  <p className={styles.readyStatus}>Ready to compare</p>
+                )}
+              </div>
+            </fieldset>
+          );
+        })}
+      </section>
+
+      {completedSlots.length === 0 ? (
+        <section className={styles.emptyState}>
+          <h2>Your comparison will appear here</h2>
+          <p>Complete at least one vehicle selection to load its specifications.</p>
+        </section>
+      ) : (
+        <section className={styles.results} aria-labelledby="comparison-results-heading">
+          <div className={styles.resultsHeading}>
+            <p className={styles.eyebrow}>Selected specifications</p>
+            <h2 id="comparison-results-heading">Comparison results</h2>
+          </div>
+
+          {specificationGroups.length === 0 ? (
+            <div className={styles.emptyState}>
+              <h3>No specifications available</h3>
+              <p>The selected engines do not include structured specification data.</p>
+            </div>
+          ) : (
+            <div
+              className={styles.tableScroll}
+              role="region"
+              aria-label="Scrollable vehicle specification comparison"
+              tabIndex={0}
+            >
+              <table>
+                <thead>
+                  <tr>
+                    <th scope="col">Specification</th>
+                    {completedSlots.map(({ slot, index }) => (
+                      <th scope="col" key={index}>
+                        <span>Vehicle {index + 1}</span>
+                        <strong>{getOptionName(slot.auto)}</strong>
+                        <small>{getOptionName(slot.engine)}</small>
+                      </th>
                     ))}
-                </select>
-            ))}
-        </div>
-        }
-        <div>
-            {Array.from({ length: 3 }, (_, index) => {
-                const selectKey = `select${index + 1}`;
-                const modelList = models[selectKey];
+                  </tr>
+                </thead>
+                <tbody>
+                  {specificationGroups.map((group) => (
+                    <FragmentGroup
+                      key={group.name}
+                      group={group}
+                      completedSlots={completedSlots}
+                    />
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </section>
+      )}
+    </main>
+  );
+}
 
-                if (!selectedBrands?.[selectKey] || !modelList || modelList.length === 0) {
-                    return null;
-                }
-
-                return (
-                    <select key={selectKey} size={Math.min(modelList.length + 1, 10)}
-                        onChange={(e) => {
-                            setSelectedModels((prev) => ({
-                                ...prev,
-                                [selectKey]: e.target.value,
-                            }));
-                        }}
-                    >
-                        <option value="">Select Model</option>
-                        {modelList.map((model) => (
-                            <option value={model.familyKey} key={model.familyKey}>
-                                {model.name}
-                            </option>
-                        ))}
-                    </select>
-                );
-            })}
-        </div>
-        <div>
-            {Array.from({ length: 3 }, (_, index) => {
-                const selectKey = `select${index + 1}`;
-                const autoList = autos[selectKey];
-
-                if (!selectedModels?.[selectKey] || !autoList || autoList.length === 0) {
-                    return null;
-                }
-
-                return (
-                    <select key={selectKey} size={Math.min(autoList.length + 1, 10)}
-                        onChange={(e) => {
-                            setSelectedAutos((prev) => ({
-                                ...prev,
-                                [selectKey]: e.target.value,
-                            }));
-                        }}
-                    >
-                        <option value="">Select Auto</option>
-                        {autoList.map((auto) => (
-                            <option value={auto.id} key={auto.id}>
-                                {auto.name}
-                            </option>
-                        ))}
-                    </select>
-                );
-            })}
-        </div>
-        <div>
-            {Array.from({ length: 3 }, (_, index) => {
-                const selectKey = `select${index + 1}`;
-                const engineList = engines[selectKey];
-
-                if (!selectedAutos?.[selectKey] || !engineList || engineList.length === 0) {
-                    return null;
-                }
-
-                return (
-                    <select key={selectKey} size={Math.min(engineList.length + 1, 10)}
-                        onChange={(e) => {
-                            setSelectedEngines((prev) => ({
-                                ...prev,
-                                [selectKey]: e.target.value,
-                            }));
-                        }}
-                    >
-                        <option value="">Select Auto</option>
-                        {engineList.map((engine) => (
-                            <option value={engine.id} key={engine.id}>
-                                {engine.name}
-                            </option>
-                        ))}
-                    </select>
-                );
-            })}
-        </div>
-        <div>
-            {Array.from({ length: 3 }, (_, index) => {
-                const selectKey = `select${index + 1}`;
-                const auto = details[`${selectKey}Auto`];
-                const engine = details[`${selectKey}Engine`]
-                const engineSpecs = engine?.specs ?? {};
-
-
-                if (!selectedEngines?.[selectKey] || !auto || !engine) {
-                    return null;
-                }
-
-                return (
-                    <section key={index}>
-                        <p>Selected engine</p>
-                        <h2 id="selected-engine-heading">
-                            {engine.displayName ?? engine.name}
-                        </h2>
-                        <div>
-                            <h3>Specifications</h3>
-                            {engineSpecs["Engine Specs"] && (
-                            <div>
-                                <h2>Engine Specs</h2>
-                                <p>Cylinders: {engineSpecs["Engine Specs"]["Cylinders:"] || "No data"}</p>
-                                <p>Displacement: {engineSpecs["Engine Specs"]["Displacement:"] || "No data"}</p>
-                                <p>Power: {engineSpecs["Engine Specs"]["Power:"] || "No data"}</p>
-                                <p>Torque: {engineSpecs["Engine Specs"]["Torque:"] || "No data"}</p>
-                                <p>Fuel System: {engineSpecs["Engine Specs"]["Fuel System:"] || "No data"}</p>
-                                <p>Fuel: {engineSpecs["Engine Specs"]["Fuel:"] || "No data"}</p>
-                            </div>
-                            )}
-                            {engineSpecs["Transmission Specs"] && (
-                            <div>
-                                <h2>Transmission Specs</h2>
-                                <p>Drive Type: {engineSpecs["Transmission Specs"]["Drive Type:"] || "No data"}</p>
-                                <p>Gearbox: {engineSpecs["Transmission Specs"]["Gearbox:"] || "No data"}</p>
-                            </div>
-                            )}
-                            {engineSpecs["Brakes Specs"] && (
-                            <div>
-                                <h2>Brakes Specs</h2>
-                                <p>Front: {engineSpecs["Brakes Specs"]["Front:"] || "No data"}</p>
-                                <p>Rear: {engineSpecs["Brakes Specs"]["Rear:"] || "No data"}</p>
-                            </div>
-                            )}
-                            {engineSpecs.Dimensions && (
-                            <div>
-                                <h2>Dimensions</h2>
-                                <p>Length: {engineSpecs.Dimensions["Length:"] || "No data"}</p>
-                                <p>Width: {engineSpecs.Dimensions["Width:"] || "No data"}</p>
-                                <p>Height: {engineSpecs.Dimensions["Height:"] || "No data"}</p>
-                                <p>Front/Rear Track: {engineSpecs.Dimensions["Front/Rear Track:"] || "No data"}</p>
-                                <p>Wheelbase: {engineSpecs.Dimensions["Wheelbase:"] || "No data"}</p>
-                                <p>Ground Clearance: {engineSpecs.Dimensions["Ground Clearance:"] || "No data"}</p>
-                            </div>
-                            )}
-                            {engineSpecs["Weight Specs"] && (
-                            <div>
-                                <h2>Weight Specs</h2>
-                                <p>Unladen Weight: {engineSpecs["Weight Specs"]["Unladen Weight:"] || "No data"}</p>
-                            </div>
-                            )}
-                        </div>
-                    </section>
-                );
-            })}
-        </div>
-    </div>
-
-  )
+function FragmentGroup({ group, completedSlots }) {
+  return (
+    <>
+      <tr className={styles.groupRow}>
+        <th scope="rowgroup" colSpan={completedSlots.length + 1}>
+          {group.name}
+        </th>
+      </tr>
+      {group.fields.map((fieldName) => (
+        <tr key={`${group.name}-${fieldName}`}>
+          <th scope="row">{fieldName}</th>
+          {completedSlots.map(({ slot, index }) => (
+            <td key={index}>{getSpecValue(slot.engine, group.name, fieldName)}</td>
+          ))}
+        </tr>
+      ))}
+    </>
+  );
 }
