@@ -1,637 +1,515 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
-import { getAllBrandsList } from "@/lib/brands";
-import {
-  getAllAutosForBrandAndFamily,
-  getAllModelFamiliesForBrand,
-} from "@/lib/modelFamilies";
+import { useEffect, useState } from "react";
+import {getAllBrandsList } from "@/lib/brands";
+import { getAllAutosForBrandAndFamily, getAllModelFamiliesForBrand } from "@/lib/modelFamilies";
 import { getAllEnginesForAutoIdList, getAutoById } from "@/lib/autos";
 import { getEngineById } from "@/lib/engines";
 import styles from "./CompareDetails.module.css";
 
-const SLOT_COUNT = 3;
-const REQUEST_STAGES = ["models", "autos", "engines", "details"];
+    const initialData = {
+        "brands":[],
+        "models":[],
+        "autos":[],
+        "engines": [],
+        "details": {
+            auto:[],
+            engine:[],
+        },
+    }
+
 const SPEC_GROUP_ORDER = [
-  "Engine Specs",
-  "Performance Specs",
-  "Transmission Specs",
-  "Brakes Specs",
-  "Tires Specs",
-  "Dimensions",
-  "Weight Specs",
-  "Fuel Economy",
+    "Engine Specs",
+    "Performance Specs",
+    "Transmission Specs",
+    "Brakes Specs",
+    "Tires Specs",
+    "Dimensions",
+    "Weight Specs",
+    "Fuel Economy",
 ];
 
-function createSlot() {
-  return {
-    brandId: "",
-    familyKey: "",
-    autoId: "",
-    engineId: "",
-    models: [],
-    autos: [],
-    engines: [],
-    auto: null,
-    engine: null,
-    loadingStage: null,
-    error: null,
-  };
-}
+const SPEC_FIELD_ORDER = {
+    "Engine Specs": ["Cylinders:", "Displacement:", "Power:", "Torque:", "Fuel System:", "Fuel:"],
+    "Transmission Specs": ["Drive Type:", "Gearbox:"],
+    "Brakes Specs": ["Front:", "Rear:"],
+    Dimensions: ["Length:", "Width:", "Height:", "Front/Rear Track:", "Wheelbase:", "Ground Clearance:"],
+    "Weight Specs": ["Unladen Weight:"],
+};
 
 function isRecord(value) {
-  return value !== null && typeof value === "object" && !Array.isArray(value);
+    return value !== null && typeof value === "object" && !Array.isArray(value);
 }
 
-function getErrorMessage(error, fallbackMessage) {
-  return error instanceof Error && error.message ? error.message : fallbackMessage;
-}
+function buildSpecificationGroups(comparisons) {
+    const groups = new Map();
 
-function getOptionName(option) {
-  return option.displayName ?? option.name;
-}
+    comparisons.forEach(({engine}) => {
+        const specs = isRecord(engine?.specs) ? engine.specs : {};
 
-function getSpecValue(engine, groupName, fieldName) {
-  const group = engine?.specs?.[groupName];
-  const value = isRecord(group) ? group[fieldName] : fieldName === "Value" ? group : undefined;
+        Object.entries(specs).forEach(([groupName, groupValue]) => {
+            const fields = groups.get(groupName) ?? [];
+            const incomingFields = isRecord(groupValue) ? Object.keys(groupValue) : ["Value"];
 
-  if (value === undefined || value === null || value === "") {
-    return "—";
-  }
+            incomingFields.forEach((fieldName) => {
+                if(!fields.includes(fieldName)){
+                    fields.push(fieldName);
+                }
+            });
 
-  if (Array.isArray(value)) {
-    return value.length > 0 ? value.join(", ") : "—";
-  }
-
-  return isRecord(value) ? JSON.stringify(value) : String(value);
-}
-
-function buildSpecificationGroups(completedSlots) {
-  const fieldsByGroup = new Map();
-
-  completedSlots.forEach(({ slot }) => {
-    const specs = isRecord(slot.engine?.specs) ? slot.engine.specs : {};
-
-    Object.entries(specs).forEach(([groupName, groupValue]) => {
-      const fields = fieldsByGroup.get(groupName) ?? [];
-      const incomingFields = isRecord(groupValue) ? Object.keys(groupValue) : ["Value"];
-
-      incomingFields.forEach((fieldName) => {
-        if (!fields.includes(fieldName)) {
-          fields.push(fieldName);
-        }
-      });
-
-      fieldsByGroup.set(groupName, fields);
+            groups.set(groupName, fields);
+        });
     });
-  });
 
-  const priority = new Map(SPEC_GROUP_ORDER.map((groupName, index) => [groupName, index]));
+    const groupPriority = new Map(SPEC_GROUP_ORDER.map((groupName, index) => [groupName, index]));
 
-  return Array.from(fieldsByGroup, ([name, fields]) => ({ name, fields })).sort((a, b) => {
-    const aPriority = priority.get(a.name) ?? Number.POSITIVE_INFINITY;
-    const bPriority = priority.get(b.name) ?? Number.POSITIVE_INFINITY;
+    return Array.from(groups, ([name, fields], groupIndex) => {
+        const preferredFields = SPEC_FIELD_ORDER[name] ?? [];
+        const fieldPriority = new Map(preferredFields.map((fieldName, index) => [fieldName, index]));
 
-    if (aPriority !== bPriority) {
-      return aPriority - bPriority;
-    }
+        return {
+            name,
+            groupIndex,
+            fields: fields
+                .map((fieldName, fieldIndex) => ({fieldName, fieldIndex}))
+                .sort((a, b) => {
+                    const aPriority = fieldPriority.get(a.fieldName) ?? Number.POSITIVE_INFINITY;
+                    const bPriority = fieldPriority.get(b.fieldName) ?? Number.POSITIVE_INFINITY;
 
-    return a.name.localeCompare(b.name);
-  });
+                    return aPriority - bPriority || a.fieldIndex - b.fieldIndex;
+                })
+                .map(({fieldName}) => fieldName),
+        };
+    })
+    .sort((a, b) => {
+        const aPriority = groupPriority.get(a.name) ?? Number.POSITIVE_INFINITY;
+        const bPriority = groupPriority.get(b.name) ?? Number.POSITIVE_INFINITY;
+
+        return aPriority - bPriority || a.groupIndex - b.groupIndex;
+    });
 }
 
-export default function CompareDetails() {
-  const [brands, setBrands] = useState([]);
-  const [brandsStatus, setBrandsStatus] = useState("loading");
-  const [brandsError, setBrandsError] = useState("");
-  const [brandsRetryKey, setBrandsRetryKey] = useState(0);
-  const [slots, setSlots] = useState(() =>
-    Array.from({ length: SLOT_COUNT }, createSlot),
-  );
+function getSpecificationValue(engine, groupName, fieldName) {
+    const group = engine?.specs?.[groupName];
+    const value = isRecord(group) ? group[fieldName] : fieldName === "Value" ? group : undefined;
 
-  const isMountedRef = useRef(false);
-  const requestVersionsRef = useRef(
-    Array.from({ length: SLOT_COUNT }, () =>
-      Object.fromEntries(REQUEST_STAGES.map((stage) => [stage, 0])),
-    ),
-  );
+    if(value === undefined || value === null || (typeof value === "string" && value.trim() === "")){
+        return "No data";
+    }
 
-  useEffect(() => {
-    isMountedRef.current = true;
+    if(Array.isArray(value)){
+        return value.length > 0 ? value.join(", ") : "No data";
+    }
 
-    return () => {
-      isMountedRef.current = false;
-    };
-  }, []);
+    return isRecord(value) ? JSON.stringify(value) : String(value);
+}
 
-  useEffect(() => {
-    let cancelled = false;
+function updateListValue(list, index, value) {
+    const updatedList = [...list];
+    updatedList[index] = value;
+    return updatedList;
+}
 
-    async function fetchBrands() {
-      try {
-        setBrandsStatus("loading");
-        setBrandsError("");
-        const response = await getAllBrandsList({ sort: "name,asc" });
+export default function CompareDetails({preSelectedAuto}) {
 
-        if (!cancelled) {
-          setBrands(response);
-          setBrandsStatus("success");
+    const [compareData, setCompareData] = useState(initialData);
+
+    const [selectedData, setSelectedData] = useState(initialData);
+
+    const preSelectedBrand = preSelectedAuto?.brand;
+    const preSelectedModel = preSelectedAuto?.model;
+    const preSelectedAutomobile = preSelectedAuto?.auto;
+    const preSelectedEngine = preSelectedAuto?.engine;
+
+    useEffect(() => {
+        let canceled = false;
+        const fetchBrands = async () => {
+            try {
+                const response = await getAllBrandsList()
+                if(!canceled){
+                    setCompareData((prev) => ({...prev, brands:response}));
+                }
+            } catch (error) {
+                if(!canceled){
+                    console.error(error);
+                }
+            }
+        };
+        fetchBrands();
+        return () => {
+            canceled = true;
         }
-      } catch (error) {
-        if (!cancelled) {
-          setBrands([]);
-          setBrandsError(getErrorMessage(error, "Unable to load automobile brands."));
-          setBrandsStatus("error");
+    },[])
+
+    function validatePreSelectedAuto(models, autos, engines){
+        const modelIds = models.map((model) => (String(model.familyKey)))
+        const autoIds = autos.map((auto) => (String(auto.id)))
+        const engineIds = engines.map((engine) => (String(engine.id)))
+
+        if(!modelIds.includes(String(preSelectedModel))
+            || !autoIds.includes(String(preSelectedAutomobile))
+            || !engineIds.includes(String(preSelectedEngine))){
+            return null;
         }
-      }
+        return 1;
     }
 
-    fetchBrands();
+    useEffect(() => {
+        let canceled = false;
 
-    return () => {
-      cancelled = true;
-    };
-  }, [brandsRetryKey]);
+        const setUpPreSelect = async () => {
+            if(!preSelectedBrand
+                || !preSelectedModel
+                || !preSelectedAutomobile
+                || !preSelectedEngine
+            ){
+                return;
+            }
 
-  function updateSlot(slotIndex, update) {
-    setSlots((currentSlots) =>
-      currentSlots.map((slot, index) =>
-        index === slotIndex ? update(slot) : slot,
-      ),
-    );
-  }
+            try {
+                const [models, autos, engines, auto, engine] = await Promise.all([
+                    getAllModelFamiliesForBrand(preSelectedBrand),
+                    getAllAutosForBrandAndFamily(preSelectedBrand, preSelectedModel),
+                    getAllEnginesForAutoIdList({autoId: preSelectedAutomobile}),
+                    getAutoById(preSelectedAutomobile),
+                    getEngineById(preSelectedEngine),
+                ]);
 
-  function invalidateRequests(slotIndex, stages = REQUEST_STAGES) {
-    stages.forEach((stage) => {
-      requestVersionsRef.current[slotIndex][stage] += 1;
-    });
-  }
+                if(canceled){
+                    return;
+                }
 
-  function beginRequest(slotIndex, stage) {
-    requestVersionsRef.current[slotIndex][stage] += 1;
-    return requestVersionsRef.current[slotIndex][stage];
-  }
+                if(!validatePreSelectedAuto(models, autos, engines)){
+                    return null;
+                }
 
-  function isCurrentRequest(slotIndex, stage, version) {
-    return (
-      isMountedRef.current &&
-      requestVersionsRef.current[slotIndex][stage] === version
-    );
-  }
+                setSelectedData((prev) => ({
+                    ...prev,
+                    brands: updateListValue(prev.brands, 0, preSelectedBrand),
+                    models: updateListValue(prev.models, 0, preSelectedModel),
+                    autos: updateListValue(prev.autos, 0, preSelectedAutomobile),
+                    engines: updateListValue(prev.engines, 0, preSelectedEngine),
+                }));
 
-  async function loadModels(slotIndex, brandId) {
-    const version = beginRequest(slotIndex, "models");
-    updateSlot(slotIndex, (slot) => ({
-      ...slot,
-      loadingStage: "models",
-      error: null,
-    }));
+                setCompareData((prev) => ({
+                    ...prev,
+                    models: updateListValue(prev.models, 0, models),
+                    autos: updateListValue(prev.autos, 0, autos),
+                    engines: updateListValue(prev.engines, 0, engines),
+                    details: {
+                        ...prev.details,
+                        auto: updateListValue(prev.details.auto, 0, auto),
+                        engine: updateListValue(prev.details.engine, 0, engine),
+                    },
+                }));
+            } catch (error) {
+                if(!canceled){
+                    console.error("Unable to set up the preselected automobile", error);
+                }
+            }
+        }
 
-    try {
-      const response = await getAllModelFamiliesForBrand(brandId, {
-        sort: "name,asc",
-      });
+        setUpPreSelect();
 
-      if (isCurrentRequest(slotIndex, "models", version)) {
-        updateSlot(slotIndex, (slot) => ({
-          ...slot,
-          models: response,
-          loadingStage: null,
-        }));
-      }
-    } catch (error) {
-      if (isCurrentRequest(slotIndex, "models", version)) {
-        updateSlot(slotIndex, (slot) => ({
-          ...slot,
-          models: [],
-          loadingStage: null,
-          error: {
-            stage: "models",
-            message: getErrorMessage(error, "Unable to load models for this brand."),
-          },
-        }));
-      }
+        return () => {
+            canceled = true;
+        }
+    }, [preSelectedBrand, preSelectedModel, preSelectedAutomobile, preSelectedEngine])
+
+    function handleDropdownUpdate(index, level){
+        if(level > 0){
+            setCompareData((prev) => {
+                const updatedDetails = {...prev.details};
+                updatedDetails.auto[index] = null;
+                updatedDetails.engine[index] = null;
+
+                return {
+                    ...prev,
+                    details: updatedDetails,
+                };
+            });
+        }
+        if(level > 1){
+            handleCompareDataChange("engines", null, index);
+        }
+        if(level > 2){
+            handleCompareDataChange("autos", null, index);
+        }
+        if(level > 3){
+            handleCompareDataChange("models", null, index);
+        }
     }
-  }
 
-  async function loadAutos(slotIndex, brandId, familyKey) {
-    const version = beginRequest(slotIndex, "autos");
-    updateSlot(slotIndex, (slot) => ({
-      ...slot,
-      loadingStage: "autos",
-      error: null,
-    }));
+    function handleSelectDataChange(type, value, index){
+        setSelectedData((prev) => {
+            const updatedList = [...prev[type]];
+            updatedList[index] = value;
 
-    try {
-      const response = await getAllAutosForBrandAndFamily(brandId, familyKey);
-
-      if (isCurrentRequest(slotIndex, "autos", version)) {
-        updateSlot(slotIndex, (slot) => ({
-          ...slot,
-          autos: response,
-          loadingStage: null,
-        }));
-      }
-    } catch (error) {
-      if (isCurrentRequest(slotIndex, "autos", version)) {
-        updateSlot(slotIndex, (slot) => ({
-          ...slot,
-          autos: [],
-          loadingStage: null,
-          error: {
-            stage: "autos",
-            message: getErrorMessage(error, "Unable to load automobiles for this model."),
-          },
-        }));
-      }
+            return {
+                ...prev,
+                [type]: updatedList,
+            };
+        });
     }
-  }
 
-  async function loadEngines(slotIndex, autoId) {
-    const version = beginRequest(slotIndex, "engines");
-    updateSlot(slotIndex, (slot) => ({
-      ...slot,
-      loadingStage: "engines",
-      error: null,
-    }));
+    function handleCompareDataChange(type, value, index) {
+        setCompareData((prev) => {
+            const updatedList = [...prev[type]];
+            updatedList[index] = value;
 
-    try {
-      const response = await getAllEnginesForAutoIdList({
-        autoId,
-        sort: "name,asc",
-      });
-
-      if (isCurrentRequest(slotIndex, "engines", version)) {
-        updateSlot(slotIndex, (slot) => ({
-          ...slot,
-          engines: response,
-          loadingStage: null,
-        }));
-      }
-    } catch (error) {
-      if (isCurrentRequest(slotIndex, "engines", version)) {
-        updateSlot(slotIndex, (slot) => ({
-          ...slot,
-          engines: [],
-          loadingStage: null,
-          error: {
-            stage: "engines",
-            message: getErrorMessage(error, "Unable to load engines for this automobile."),
-          },
-        }));
-      }
+            return {
+                ...prev,
+                [type]: updatedList,
+            };
+        });
     }
-  }
 
-  async function loadDetails(slotIndex, autoId, engineId) {
-    const version = beginRequest(slotIndex, "details");
-    updateSlot(slotIndex, (slot) => ({
-      ...slot,
-      loadingStage: "details",
-      error: null,
-    }));
-
-    try {
-      const [auto, engine] = await Promise.all([
-        getAutoById(autoId),
-        getEngineById(engineId),
-      ]);
-
-      if (String(engine.automobileId) !== String(autoId)) {
-        throw new Error("The selected engine does not belong to this automobile.");
-      }
-
-      if (isCurrentRequest(slotIndex, "details", version)) {
-        updateSlot(slotIndex, (slot) => ({
-          ...slot,
-          auto,
-          engine,
-          loadingStage: null,
-        }));
-      }
-    } catch (error) {
-      if (isCurrentRequest(slotIndex, "details", version)) {
-        updateSlot(slotIndex, (slot) => ({
-          ...slot,
-          auto: null,
-          engine: null,
-          loadingStage: null,
-          error: {
-            stage: "details",
-            message: getErrorMessage(error, "Unable to load the selected comparison details."),
-          },
-        }));
-      }
+    async function handleBrandSelect(index, value) {
+        handleDropdownUpdate(index, 4)
+        handleSelectDataChange("brands", value, index)
+        if(value){
+            const response = await getAllModelFamiliesForBrand(value);
+            handleCompareDataChange("models", response, index);
+        }
     }
-  }
 
-  function handleBrandChange(slotIndex, brandId) {
-    invalidateRequests(slotIndex);
-    updateSlot(slotIndex, () => ({
-      ...createSlot(),
-      brandId,
-    }));
-
-    if (brandId) {
-      loadModels(slotIndex, brandId);
+    async function handleModelSelect(index, value) {
+        handleDropdownUpdate(index, 3)
+        handleSelectDataChange("models", value, index)
+        if(value){
+            const response = await getAllAutosForBrandAndFamily(selectedData.brands[index], value);
+            handleCompareDataChange("autos", response, index);
+        }
     }
-  }
 
-  function handleModelChange(slotIndex, brandId, familyKey) {
-    invalidateRequests(slotIndex, ["autos", "engines", "details"]);
-    updateSlot(slotIndex, (slot) => ({
-      ...slot,
-      familyKey,
-      autoId: "",
-      engineId: "",
-      autos: [],
-      engines: [],
-      auto: null,
-      engine: null,
-      loadingStage: null,
-      error: null,
-    }));
-
-    if (familyKey) {
-      loadAutos(slotIndex, brandId, familyKey);
+    async function handleAutoSelect(index, value) {
+        handleDropdownUpdate(index, 2);
+        handleSelectDataChange("autos", value, index);
+        if(value){
+            const response = await getAllEnginesForAutoIdList({autoId:value});
+            handleCompareDataChange("engines", response, index);
+        }
     }
-  }
 
-  function handleAutoChange(slotIndex, autoId) {
-    invalidateRequests(slotIndex, ["engines", "details"]);
-    updateSlot(slotIndex, (slot) => ({
-      ...slot,
-      autoId,
-      engineId: "",
-      engines: [],
-      auto: null,
-      engine: null,
-      loadingStage: null,
-      error: null,
-    }));
+    async function handleEngineSelect(index, value) {
+        handleDropdownUpdate(index, 1)
+        handleSelectDataChange("engines", value, index);
+        Promise.all([
+            getAutoById(selectedData.autos[index]),
+            getEngineById(value)
+        ])
+        .then(([auto, engine]) => {
+            setCompareData((prev) => {
+                const updatedDetails = {...prev.details};
+                updatedDetails.auto[index] = auto;
+                updatedDetails.engine[index] = engine;
 
-    if (autoId) {
-      loadEngines(slotIndex, autoId);
+                return {
+                    ...prev,
+                    details: updatedDetails,
+                };
+            });
+        })
+        .catch((error) => {
+            console.log(error)
+        });
     }
-  }
 
-  function handleEngineChange(slotIndex, autoId, engineId) {
-    invalidateRequests(slotIndex, ["details"]);
-    updateSlot(slotIndex, (slot) => ({
-      ...slot,
-      engineId,
-      auto: null,
-      engine: null,
-      loadingStage: null,
-      error: null,
-    }));
+    const completedComparisons = Array.from({length: 3}, (_, index) => ({
+        index,
+        auto: compareData.details.auto[index],
+        engine: compareData.details.engine[index],
+    })).filter(({index, auto, engine}) => selectedData.engines[index] && auto && engine);
 
-    if (engineId) {
-      loadDetails(slotIndex, autoId, engineId);
-    }
-  }
-
-  function retrySlot(slotIndex) {
-    const slot = slots[slotIndex];
-
-    switch (slot.error?.stage) {
-      case "models":
-        loadModels(slotIndex, slot.brandId);
-        break;
-      case "autos":
-        loadAutos(slotIndex, slot.brandId, slot.familyKey);
-        break;
-      case "engines":
-        loadEngines(slotIndex, slot.autoId);
-        break;
-      case "details":
-        loadDetails(slotIndex, slot.autoId, slot.engineId);
-        break;
-      default:
-        break;
-    }
-  }
-
-  const completedSlots = slots
-    .map((slot, index) => ({ slot, index }))
-    .filter(({ slot }) => slot.auto && slot.engine);
-  const specificationGroups = buildSpecificationGroups(completedSlots);
-
-  if (brandsStatus === "error") {
-    return (
-      <main className={styles.compare}>
-        <section className={styles.statePanel} role="alert">
-          <p className={styles.eyebrow}>Vehicle comparison</p>
-          <h1>Brands are unavailable</h1>
-          <p>{brandsError}</p>
-          <button
-            type="button"
-            onClick={() => setBrandsRetryKey((currentKey) => currentKey + 1)}
-          >
-            Try again
-          </button>
-        </section>
-      </main>
-    );
-  }
+    const specificationGroups = buildSpecificationGroups(completedComparisons);
 
   return (
-    <main className={styles.compare}>
-      <header className={styles.hero}>
-        <p className={styles.eyebrow}>Vehicle comparison</p>
-        <h1>Compare engines side by side</h1>
-        <p>
-          Build up to three automobile selections, then review every available
-          engine specification in one aligned table.
-        </p>
-      </header>
+    <div className={styles.compare}>
+        <header className={styles.hero}>
+            <p className={styles.eyebrow}>Auto Scope comparison studio</p>
+            <h1>Build your ideal three-car comparison.</h1>
+            <p className={styles.intro}>
+                Select a brand, model, automobile, and engine for each slot. Your chosen specifications will appear below for a clear side-by-side review.
+            </p>
+        </header>
 
-      <section className={styles.slotGrid} aria-label="Comparison selections">
-        {slots.map((slot, slotIndex) => {
-          const slotNumber = slotIndex + 1;
-          const loadingLabel = slot.loadingStage
-            ? `Loading ${slot.loadingStage === "details" ? "comparison details" : slot.loadingStage}`
-            : "";
-
-          return (
-            <fieldset
-              className={styles.slot}
-              key={slotNumber}
-              aria-busy={Boolean(slot.loadingStage)}
-            >
-              <legend>Vehicle {slotNumber}</legend>
-
-              <label htmlFor={`compare-brand-${slotNumber}`}>Brand</label>
-              <select
-                id={`compare-brand-${slotNumber}`}
-                value={slot.brandId}
-                disabled={brandsStatus === "loading"}
-                onChange={(event) =>
-                  handleBrandChange(slotIndex, event.target.value)
-                }
-              >
-                <option value="">
-                  {brandsStatus === "loading" ? "Loading brands…" : "Select brand"}
-                </option>
-                {brands.map((brand) => (
-                  <option value={brand.id} key={brand.id}>
-                    {getOptionName(brand)}
-                  </option>
-                ))}
-              </select>
-
-              <label htmlFor={`compare-model-${slotNumber}`}>Model</label>
-              <select
-                id={`compare-model-${slotNumber}`}
-                value={slot.familyKey}
-                disabled={!slot.brandId || slot.loadingStage === "models"}
-                onChange={(event) =>
-                  handleModelChange(slotIndex, slot.brandId, event.target.value)
-                }
-              >
-                <option value="">
-                  {slot.loadingStage === "models" ? "Loading models…" : "Select model"}
-                </option>
-                {slot.models.map((model) => (
-                  <option value={model.familyKey} key={model.familyKey}>
-                    {getOptionName(model)}
-                  </option>
-                ))}
-              </select>
-
-              <label htmlFor={`compare-auto-${slotNumber}`}>Automobile</label>
-              <select
-                id={`compare-auto-${slotNumber}`}
-                value={slot.autoId}
-                disabled={!slot.familyKey || slot.loadingStage === "autos"}
-                onChange={(event) =>
-                  handleAutoChange(slotIndex, event.target.value)
-                }
-              >
-                <option value="">
-                  {slot.loadingStage === "autos" ? "Loading automobiles…" : "Select automobile"}
-                </option>
-                {slot.autos.map((auto) => (
-                  <option value={auto.id} key={auto.id}>
-                    {getOptionName(auto)}
-                  </option>
-                ))}
-              </select>
-
-              <label htmlFor={`compare-engine-${slotNumber}`}>Engine</label>
-              <select
-                id={`compare-engine-${slotNumber}`}
-                value={slot.engineId}
-                disabled={!slot.autoId || slot.loadingStage === "engines"}
-                onChange={(event) =>
-                  handleEngineChange(slotIndex, slot.autoId, event.target.value)
-                }
-              >
-                <option value="">
-                  {slot.loadingStage === "engines" ? "Loading engines…" : "Select engine"}
-                </option>
-                {slot.engines.map((engine) => (
-                  <option value={engine.id} key={engine.id}>
-                    {getOptionName(engine)}
-                  </option>
-                ))}
-              </select>
-
-              <div className={styles.slotStatus} aria-live="polite">
-                {slot.loadingStage && (
-                  <p className={styles.loadingStatus}>
-                    <span aria-hidden="true" />
-                    {loadingLabel}
-                  </p>
-                )}
-                {slot.error && (
-                  <div className={styles.slotError} role="alert">
-                    <p>{slot.error.message}</p>
-                    <button type="button" onClick={() => retrySlot(slotIndex)}>
-                      Retry
-                    </button>
-                  </div>
-                )}
-                {slot.auto && slot.engine && !slot.loadingStage && !slot.error && (
-                  <p className={styles.readyStatus}>Ready to compare</p>
-                )}
-              </div>
-            </fieldset>
-          );
-        })}
-      </section>
-
-      {completedSlots.length === 0 ? (
-        <section className={styles.emptyState}>
-          <h2>Your comparison will appear here</h2>
-          <p>Complete at least one vehicle selection to load its specifications.</p>
-        </section>
-      ) : (
-        <section className={styles.results} aria-labelledby="comparison-results-heading">
-          <div className={styles.resultsHeading}>
-            <p className={styles.eyebrow}>Selected specifications</p>
-            <h2 id="comparison-results-heading">Comparison results</h2>
-          </div>
-
-          {specificationGroups.length === 0 ? (
-            <div className={styles.emptyState}>
-              <h3>No specifications available</h3>
-              <p>The selected engines do not include structured specification data.</p>
+        {compareData.brands &&
+        <section className={styles.selectionSection} aria-labelledby="comparison-builder-heading">
+            <div className={styles.sectionHeading}>
+                <div>
+                    <p className={styles.sectionEyebrow}>Selection</p>
+                    <h2 id="comparison-builder-heading">Configure vehicles</h2>
+                </div>
+                <p>Complete any slot independently.</p>
             </div>
-          ) : (
-            <div
-              className={styles.tableScroll}
-              role="region"
-              aria-label="Scrollable vehicle specification comparison"
-              tabIndex={0}
-            >
-              <table>
-                <thead>
-                  <tr>
-                    <th scope="col">Specification</th>
-                    {completedSlots.map(({ slot, index }) => (
-                      <th scope="col" key={index}>
-                        <span>Vehicle {index + 1}</span>
-                        <strong>{getOptionName(slot.auto)}</strong>
-                        <small>{getOptionName(slot.engine)}</small>
-                      </th>
-                    ))}
-                  </tr>
-                </thead>
-                <tbody>
-                  {specificationGroups.map((group) => (
-                    <FragmentGroup
-                      key={group.name}
-                      group={group}
-                      completedSlots={completedSlots}
-                    />
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          )}
-        </section>
-      )}
-    </main>
-  );
-}
 
-function FragmentGroup({ group, completedSlots }) {
-  return (
-    <>
-      <tr className={styles.groupRow}>
-        <th scope="rowgroup" colSpan={completedSlots.length + 1}>
-          {group.name}
-        </th>
-      </tr>
-      {group.fields.map((fieldName) => (
-        <tr key={`${group.name}-${fieldName}`}>
-          <th scope="row">{fieldName}</th>
-          {completedSlots.map(({ slot, index }) => (
-            <td key={index}>{getSpecValue(slot.engine, group.name, fieldName)}</td>
-          ))}
-        </tr>
-      ))}
-    </>
-  );
+            <div className={styles.slotGrid}>
+                {Array.from({ length: 3 }, (_, index) => {
+                    const models = compareData.models[index];
+                    const autos = compareData.autos[index];
+                    const engines = compareData.engines[index];
+
+                    return (
+                        <article className={styles.slotCard} key={index}>
+                            <div className={styles.slotHeader}>
+                                <div>
+                                    <p>Comparison slot</p>
+                                    <h3>Vehicle {index + 1}</h3>
+                                </div>
+                                <span className={styles.slotNumber}>0{index + 1}</span>
+                            </div>
+
+                            <div className={styles.slotProgress} aria-hidden="true">
+                                <span />
+                                <span />
+                                <span />
+                                <span />
+                            </div>
+
+                            <div className={styles.fields}>
+                                <label className={styles.field} htmlFor={`compare-brand-${index}`}>
+                                    <span>Brand</span>
+                                    <select id={`compare-brand-${index}`}
+                                        value={selectedData.brands[index]}
+                                        onChange={(e) => {handleBrandSelect(index, e.target.value)}}>
+                                        <option value="">Select Brand</option>
+                                        {compareData.brands.map((brand) => (
+                                            <option value={brand.id} key={brand.id}>{brand.name}</option>
+                                        ))}
+                                    </select>
+                                </label>
+
+                                {selectedData.brands[index] && models && (
+                                    <label className={styles.field} htmlFor={`compare-model-${index}`}>
+                                        <span>Model</span>
+                                        <select id={`compare-model-${index}`}
+                                            value={selectedData.models[index]}
+                                            onChange={(e) => {
+                                                handleModelSelect(index, e.target.value);
+                                            }}
+                                        >
+                                            <option value="">Select Model</option>
+                                            {models.map((model) => (
+                                                <option value={model.familyKey} key={model.familyKey}>
+                                                    {model.name}
+                                                </option>
+                                            ))}
+                                        </select>
+                                    </label>
+                                )}
+
+                                {selectedData.models[index] && autos && (
+                                    <label className={styles.field} htmlFor={`compare-auto-${index}`}>
+                                        <span>Automobile</span>
+                                        <select id={`compare-auto-${index}`}
+                                            value={selectedData.autos[index]}
+                                            onChange={(e) => {
+                                                handleAutoSelect(index, e.target.value)
+                                            }}
+                                        >
+                                            <option value="">Select Auto</option>
+                                            {autos.map((auto) => (
+                                                <option value={auto.id} key={auto.id}>
+                                                    {auto.name}
+                                                </option>
+                                            ))}
+                                        </select>
+                                    </label>
+                                )}
+
+                                {selectedData.autos[index] && engines && (
+                                    <label className={styles.field} htmlFor={`compare-engine-${index}`}>
+                                        <span>Engine</span>
+                                        <select id={`compare-engine-${index}`}
+                                            value={selectedData.engines[index]}
+                                            onChange={(e) => {
+                                                handleEngineSelect(index, e.target.value)
+                                            }}
+                                        >
+                                            <option value="">Select Engine</option>
+                                            {engines.map((engine) => (
+                                                <option value={engine.id} key={engine.id}>
+                                                    {engine.name}
+                                                </option>
+                                            ))}
+                                        </select>
+                                    </label>
+                                )}
+                            </div>
+                        </article>
+                    );
+                })}
+            </div>
+        </section>
+        }
+
+        <section className={styles.resultsSection} aria-labelledby="comparison-results-heading">
+            <div className={styles.sectionHeading}>
+                <div>
+                    <p className={styles.sectionEyebrow}>Specifications</p>
+                    <h2 id="comparison-results-heading">Selected comparisons</h2>
+                </div>
+                <p>Detailed engine data for each completed slot.</p>
+            </div>
+
+            {completedComparisons.length === 0 ? (
+                <div className={styles.comparisonState}>
+                    Complete an engine selection to reveal its specifications.
+                </div>
+            ) : specificationGroups.length === 0 ? (
+                <div className={styles.comparisonState}>
+                    The selected engines do not include specification data.
+                </div>
+            ) : (
+                <div className={styles.tableScroll} role="region"
+                    aria-label="Scrollable vehicle specification comparison" tabIndex={0}>
+                    <table className={styles.comparisonTable}
+                        style={{minWidth: `${220 + completedComparisons.length * 260}px`}}>
+                        <colgroup>
+                            <col className={styles.specificationColumn}/>
+                            {completedComparisons.map(({index}) => <col key={index}/>)}
+                        </colgroup>
+                        <thead>
+                            <tr>
+                                <th scope="col">Specification</th>
+                                {completedComparisons.map(({index, auto, engine}) => (
+                                    <th scope="col" key={index}>
+                                        <span className={styles.vehicleSlot}>Vehicle {index + 1}</span>
+                                        <strong>{auto.displayName ?? auto.name}</strong>
+                                        <small>{engine.displayName ?? engine.name}</small>
+                                    </th>
+                                ))}
+                            </tr>
+                        </thead>
+                        {specificationGroups.map((group) => (
+                            <tbody key={group.name}>
+                                <tr className={styles.groupRow}>
+                                    <th scope="rowgroup" colSpan={completedComparisons.length + 1}>
+                                        {group.name}
+                                    </th>
+                                </tr>
+                                {group.fields.map((fieldName) => (
+                                    <tr key={`${group.name}-${fieldName}`}>
+                                        <th scope="row">{fieldName}</th>
+                                        {completedComparisons.map(({index, engine}) => {
+                                            const value = getSpecificationValue(engine, group.name, fieldName);
+
+                                            return (
+                                                <td className={value === "No data" ? styles.missingValue : undefined}
+                                                    key={index}>
+                                                    {value}
+                                                </td>
+                                            );
+                                        })}
+                                    </tr>
+                                ))}
+                            </tbody>
+                        ))}
+                    </table>
+                </div>
+            )}
+        </section>
+    </div>
+
+  )
 }
