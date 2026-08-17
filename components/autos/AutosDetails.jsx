@@ -4,6 +4,7 @@ import { getAutoById } from "@/lib/autos";
 import { getEngineById } from "@/lib/engines";
 import BrandLogo from "@/components/brand/BrandLogo";
 import useBrand from "@/components/brand/useBrand";
+import EngineMeasurementValue from "@/components/autos/EngineMeasurementValue";
 import Image from "next/image";
 import Link from "next/link";
 import { useState, useEffect, useRef } from "react";
@@ -298,8 +299,20 @@ useEffect(() => {
                 <h2>Engine Specs</h2>
                 <p>Cylinders: {engineSpecs["Engine Specs"]["Cylinders:"] || "No data"}</p>
                 <p>Displacement: {engineSpecs["Engine Specs"]["Displacement:"] || "No data"}</p>
-                <p>Power: {engineSpecs["Engine Specs"]["Power:"] || "No data"}</p>
-                <p>Torque: {engineSpecs["Engine Specs"]["Torque:"] || "No data"}</p>
+                <p className={styles.measurementSpecification}>
+                  <span>Power:</span>
+                  <EngineMeasurementValue
+                    measurement="power"
+                    value={engineSpecs["Engine Specs"]["Power:"]}
+                  />
+                </p>
+                <p className={styles.measurementSpecification}>
+                  <span>Torque:</span>
+                  <EngineMeasurementValue
+                    measurement="torque"
+                    value={engineSpecs["Engine Specs"]["Torque:"]}
+                  />
+                </p>
                 <p>Fuel System: {engineSpecs["Engine Specs"]["Fuel System:"] || "No data"}</p>
                 <p>Fuel: {engineSpecs["Engine Specs"]["Fuel:"] || "No data"}</p>
               </div>

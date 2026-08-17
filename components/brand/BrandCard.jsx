@@ -7,7 +7,7 @@ export default function BrandCard({brand}) {
     <article className={styles.card}>
         <BrandLogo brand={brand} />
         <span className={styles.label}>Manufacturer</span>
-        <h2>{brand.displayName}</h2>
+        <h2>{brand.displayName ?? brand.name}</h2>
         <Link href={`/brands/${brand.id}`}>
             View model families <span aria-hidden="true">→</span>
         </Link>

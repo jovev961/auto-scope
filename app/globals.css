@@ -55,7 +55,8 @@ a {
 
 button,
 input,
-select {
+select,
+textarea {
   font: inherit;
 }
 
@@ -72,6 +73,14 @@ a {
 ::selection {
   color: #ffffff;
   background: rgba(78, 157, 255, 0.45);
+}
+
+@media (max-width: 760px) {
+  input,
+  select,
+  textarea {
+    font-size: 1rem;
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {

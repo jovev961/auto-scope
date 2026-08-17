@@ -187,6 +187,9 @@
   .engineCard {
     min-height: 170px;
     grid-template-columns: 1fr auto;
+    gap: 16px;
+    border-radius: 16px;
+    padding: 20px;
   }
 
   .cardIndex { grid-column: 1 / -1; }
