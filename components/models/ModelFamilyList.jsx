@@ -76,23 +76,24 @@ export default function ModelFamilyList({ brandId }) {
         <div className={styles.headingRow}>
           {brand && <BrandLogo brand={brand} variant="hero" />}
           <div>
-            <p className={styles.eyebrow}>{brandId ? "Brand catalogue" : "Family directory"}</p>
-            <h1>{brandId ? "Explore model families" : "Explore all model families"}</h1>
+            <p className={styles.eyebrow}>{brandId ? "Brand catalogue" : "Model directory"}</p>
+            <h1>{brandId ? "Explore models" : "Explore all models"}</h1>
           </div>
         </div>
         <p>
-          Browse one card per model family, then open it to compare its generations, years, and body variants.
+          Browse one card per model, then open it to compare its generations, years, and body variants.
         </p>
       </div>
 
       <div className={styles.controls}>
         <label className={styles.searchLabel}>
-          <span>Search model families</span>
+          <span>Search models</span>
           <input
             className={styles.searchInput}
             type="search"
+            suppressHydrationWarning
             value={search}
-            placeholder={brandId ? "Search this brand, for example A3" : "Search all brands and families"}
+            placeholder={brandId ? "Search this brand, for example A3" : "Search all brands and models"}
             onChange={(event) => {
               setSearch(event.target.value);
               setPage(0);
@@ -104,6 +105,7 @@ export default function ModelFamilyList({ brandId }) {
           <span>Sort by</span>
           <select
             className={styles.sortSelect}
+            suppressHydrationWarning
             value={sort}
             onChange={(event) => {
               setSort(event.target.value);

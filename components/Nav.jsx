@@ -10,9 +10,23 @@ export default function Nav() {
       </Link>
       <div className={styles.links}>
         <Link href="/">Home</Link>
-        <Link href="/brands">Brands</Link>
-        <Link href="/models">Models</Link>
-        <Link href="/autos">All cars</Link>
+        <div className={styles.dropdown}>
+          <button
+            className={styles.dropdownTrigger}
+            type="button"
+            aria-haspopup="true"
+            aria-controls="catalogue-navigation"
+          >
+            Catalogue
+            <span className={styles.chevron} aria-hidden="true">⌄</span>
+          </button>
+          <div className={styles.dropdownMenu} id="catalogue-navigation">
+            <Link href="/autos">Cars</Link>
+            <Link href="/models">Models</Link>
+            <Link href="/brands">Brands</Link>
+          </div>
+        </div>
+        <Link href="/compare">Compare</Link>
       </div>
     </nav>
   );

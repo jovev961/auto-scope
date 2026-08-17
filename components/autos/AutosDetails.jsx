@@ -194,9 +194,14 @@ useEffect(() => {
 
   return (
     <div className={styles.details}>
-      <Link className={styles.backLink} href={`/autos/${autoId}`}>
-        ← Choose another engine
-      </Link>
+      <nav className={styles.detailActions} aria-label="Automobile actions">
+        <Link className={styles.backLink} href={`/autos/${autoId}`}>
+          ← Choose another engine
+        </Link>
+        <Link className={styles.compareLink} href={`/compare?brandId=${auto.brandId}&familyKey=${auto.familyKey}&autoId=${auto.id}&engineId=${engine.id}`}>
+          Compare
+        </Link>
+      </nav>
       <div className={styles.brandRow}>
         {brand && <BrandLogo brand={brand} variant="hero" />}
         <div>
