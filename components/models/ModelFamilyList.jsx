@@ -91,6 +91,7 @@ export default function ModelFamilyList({ brandId }) {
           <input
             className={styles.searchInput}
             type="search"
+            suppressHydrationWarning
             value={search}
             placeholder={brandId ? "Search this brand, for example A3" : "Search all brands and models"}
             onChange={(event) => {
@@ -104,6 +105,7 @@ export default function ModelFamilyList({ brandId }) {
           <span>Sort by</span>
           <select
             className={styles.sortSelect}
+            suppressHydrationWarning
             value={sort}
             onChange={(event) => {
               setSort(event.target.value);

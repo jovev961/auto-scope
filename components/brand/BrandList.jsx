@@ -59,6 +59,7 @@ const [brands, setBrands] = useState([]);
                     <input
                         className={styles.searchInput}
                         type="text"
+                        suppressHydrationWarning
                         value={search}
                         placeholder="Search by brand name"
                         onChange={(event) => {
@@ -72,6 +73,7 @@ const [brands, setBrands] = useState([]);
                     <span>Sort by</span>
                     <select
                         className={styles.sortSelect}
+                        suppressHydrationWarning
                         value={sort}
                         onChange={(event) => {
                             setSort(event.target.value);

@@ -370,6 +370,7 @@ export default function CompareDetails({preSelectedAuto}) {
                                 <label className={styles.field} htmlFor={`compare-brand-${index}`}>
                                     <span>Brand</span>
                                     <select id={`compare-brand-${index}`}
+                                        suppressHydrationWarning
                                         value={selectedData.brands[index]}
                                         onChange={(e) => {handleBrandSelect(index, e.target.value)}}>
                                         <option value="">Select Brand</option>
@@ -383,6 +384,7 @@ export default function CompareDetails({preSelectedAuto}) {
                                     <label className={styles.field} htmlFor={`compare-model-${index}`}>
                                         <span>Model</span>
                                         <select id={`compare-model-${index}`}
+                                            suppressHydrationWarning
                                             value={selectedData.models[index]}
                                             onChange={(e) => {
                                                 handleModelSelect(index, e.target.value);
@@ -402,6 +404,7 @@ export default function CompareDetails({preSelectedAuto}) {
                                     <label className={styles.field} htmlFor={`compare-auto-${index}`}>
                                         <span>Automobile</span>
                                         <select id={`compare-auto-${index}`}
+                                            suppressHydrationWarning
                                             value={selectedData.autos[index]}
                                             onChange={(e) => {
                                                 handleAutoSelect(index, e.target.value)
@@ -421,6 +424,7 @@ export default function CompareDetails({preSelectedAuto}) {
                                     <label className={styles.field} htmlFor={`compare-engine-${index}`}>
                                         <span>Engine</span>
                                         <select id={`compare-engine-${index}`}
+                                            suppressHydrationWarning
                                             value={selectedData.engines[index]}
                                             onChange={(e) => {
                                                 handleEngineSelect(index, e.target.value)

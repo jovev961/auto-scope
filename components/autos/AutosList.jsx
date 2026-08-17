@@ -84,6 +84,7 @@ export default function AutosList({brandId}) {
                     <input
                         className={styles.searchInput}
                         type="text"
+                        suppressHydrationWarning
                         value={search}
                         placeholder="Search by automobile name"
                         onChange={(event) => {
@@ -97,6 +98,7 @@ export default function AutosList({brandId}) {
                     <span>Sort by</span>
                     <select
                         className={styles.sortSelect}
+                        suppressHydrationWarning
                         value={sort}
                         onChange={(event) => {
                             setSort(event.target.value);
