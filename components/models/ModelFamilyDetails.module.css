@@ -121,14 +121,18 @@
 }
 
 .variantCard {
+  position: relative;
+  isolation: isolate;
   overflow: hidden;
   border: 1px solid var(--border);
   border-radius: 16px;
   background: var(--surface);
+  cursor: pointer;
   transition: transform 180ms ease, border-color 180ms ease;
 }
 
-.variantCard:hover {
+.variantCard:hover,
+.variantCard:focus-within {
   transform: translateY(-3px);
   border-color: rgba(114, 178, 255, 0.42);
 }
@@ -181,6 +185,13 @@
   color: var(--text-soft);
   font-size: 0.82rem;
   font-weight: 650;
+}
+
+.variantContent a::after {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  content: "";
 }
 
 .variantContent a:hover {
@@ -238,4 +249,9 @@
   .generationHeading { grid-template-columns: 1fr; }
   .generationHeading > p { grid-column: auto; }
   .variantGrid { grid-template-columns: 1fr; }
+
+  .backLink {
+    min-height: 44px;
+    margin-bottom: 32px;
+  }
 }

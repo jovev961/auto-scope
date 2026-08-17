@@ -1,0 +1,11 @@
+.measurementValue {
+  display: inline-grid;
+  max-width: 100%;
+  gap: 0.28rem;
+  vertical-align: top;
+}
+
+.measurementLine {
+  display: block;
+  white-space: nowrap;
+}

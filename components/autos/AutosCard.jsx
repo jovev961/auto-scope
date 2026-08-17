@@ -6,12 +6,18 @@ import Link from "next/link"
 import { useEffect, useState } from "react";
 import styles from "./AutosCard.module.css";
 
-export default function AutosCard({auto}) {
+export default function AutosCard({auto, initialPhotos}) {
 
-  const [autoPhotos, setAutoPhotos] = useState([]);
+  const [autoPhotos, setAutoPhotos] = useState(() =>
+    Array.isArray(initialPhotos) ? initialPhotos : [],
+  );
   const [activePhotoIndex, setActivePhotoIndex] = useState(0);
 
   useEffect(() => {
+    if (Array.isArray(initialPhotos)) {
+      return undefined;
+    }
+
     let canceled = false;
     async function fetchPhotos() {
       try{
@@ -33,7 +39,7 @@ export default function AutosCard({auto}) {
     return () => {
       canceled = true;
     };
-  },[auto])
+  },[auto, initialPhotos])
 
   const showPreviousPhoto = () => {
     setActivePhotoIndex((currentIndex) =>

@@ -138,8 +138,8 @@
 }
 
 .pageButton {
-  min-width: 42px;
-  min-height: 42px;
+  min-width: 44px;
+  min-height: 44px;
   flex: 0 0 auto;
   border: 1px solid var(--border);
   border-radius: 10px;
@@ -191,6 +191,11 @@
 
   .sortLabel {
     width: 100%;
+  }
+
+  .searchInput,
+  .sortSelect {
+    font-size: 1rem;
   }
 
   .grid {

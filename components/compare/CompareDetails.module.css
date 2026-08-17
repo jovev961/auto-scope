@@ -207,7 +207,16 @@
   text-align: center;
 }
 
+.tableRegion {
+  position: relative;
+}
+
+.scrollHint {
+  display: none;
+}
+
 .tableScroll {
+  isolation: isolate;
   overflow-x: auto;
   margin-top: 30px;
   border: 1px solid var(--border);
@@ -238,6 +247,7 @@
 
 .comparisonTable {
   width: 100%;
+  isolation: isolate;
   border-collapse: separate;
   border-spacing: 0;
   table-layout: fixed;
@@ -270,14 +280,19 @@
   top: 0;
   z-index: 3;
   min-height: 112px;
-  background: rgba(18, 24, 34, 0.98);
+  background: #121822;
   box-shadow: inset 0 -1px rgba(190, 207, 228, 0.08);
 }
 
 .comparisonTable thead th:first-child {
   left: 0;
-  z-index: 5;
+  z-index: 6;
   color: var(--text-soft);
+  background: #121822;
+  box-shadow:
+    inset -1px 0 rgba(190, 207, 228, 0.16),
+    inset 0 -1px rgba(190, 207, 228, 0.08),
+    14px 0 24px rgba(0, 0, 0, 0.2);
   font-size: 0.75rem;
   font-weight: 700;
   letter-spacing: 0.13em;
@@ -317,9 +332,12 @@
 .comparisonTable tbody tr:not(.groupRow) > th {
   position: sticky;
   left: 0;
-  z-index: 2;
+  z-index: 4;
   color: var(--text-soft);
-  background: rgba(15, 20, 28, 0.98);
+  background: #0f141c;
+  box-shadow:
+    inset -1px 0 rgba(190, 207, 228, 0.14),
+    14px 0 24px rgba(0, 0, 0, 0.16);
   font-size: 0.8rem;
   font-weight: 650;
   line-height: 1.45;
@@ -338,18 +356,32 @@
 }
 
 .comparisonTable tbody tr:not(.groupRow):hover > th {
-  background-color: rgba(20, 31, 45, 0.98);
+  background-color: #14202d;
+}
+
+.groupRow > * {
+  padding-top: 13px;
+  padding-bottom: 13px;
+  background: #17263a;
 }
 
 .groupRow th {
-  padding-top: 13px;
-  padding-bottom: 13px;
+  position: sticky;
+  left: 0;
+  z-index: 5;
   color: var(--accent-strong);
-  background: rgba(78, 157, 255, 0.1);
+  box-shadow:
+    inset -1px 0 rgba(190, 207, 228, 0.16),
+    14px 0 24px rgba(0, 0, 0, 0.18);
   font-size: 0.7rem;
   font-weight: 750;
   letter-spacing: 0.14em;
   text-transform: uppercase;
+}
+
+.groupRow td {
+  padding-right: 0;
+  padding-left: 0;
 }
 
 .missingValue {
@@ -406,12 +438,25 @@
   }
 
   .tableScroll {
+    margin-top: 10px;
     border-radius: 17px;
+    overscroll-behavior-inline: contain;
+    scroll-snap-type: x proximity;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .scrollHint {
+    display: block;
+    margin-top: 24px;
+    color: var(--muted);
+    font-size: 0.76rem;
+    line-height: 1.5;
   }
 
   .comparisonTable th,
   .comparisonTable td {
     padding: 15px 16px;
+    scroll-snap-align: start;
   }
 
   .specificationColumn {

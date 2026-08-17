@@ -5,6 +5,7 @@ import {getAllBrandsList } from "@/lib/brands";
 import { getAllAutosForBrandAndFamily, getAllModelFamiliesForBrand } from "@/lib/modelFamilies";
 import { getAllEnginesForAutoIdList, getAutoById } from "@/lib/autos";
 import { getEngineById } from "@/lib/engines";
+import EngineMeasurementValue from "@/components/autos/EngineMeasurementValue";
 import styles from "./CompareDetails.module.css";
 
     const initialData = {
@@ -465,10 +466,15 @@ export default function CompareDetails({preSelectedAuto}) {
                     The selected engines do not include specification data.
                 </div>
             ) : (
-                <div className={styles.tableScroll} role="region"
-                    aria-label="Scrollable vehicle specification comparison" tabIndex={0}>
-                    <table className={styles.comparisonTable}
-                        style={{minWidth: `${220 + completedComparisons.length * 260}px`}}>
+                <div className={styles.tableRegion}>
+                    <p className={styles.scrollHint} id="comparison-scroll-hint">
+                        Swipe horizontally to compare every vehicle.
+                    </p>
+                    <div className={styles.tableScroll} role="region"
+                        aria-label="Scrollable vehicle specification comparison"
+                        aria-describedby="comparison-scroll-hint" tabIndex={0}>
+                        <table className={styles.comparisonTable}
+                            style={{minWidth: `${220 + completedComparisons.length * 260}px`}}>
                         <colgroup>
                             <col className={styles.specificationColumn}/>
                             {completedComparisons.map(({index}) => <col key={index}/>)}
@@ -488,20 +494,26 @@ export default function CompareDetails({preSelectedAuto}) {
                         {specificationGroups.map((group) => (
                             <tbody key={group.name}>
                                 <tr className={styles.groupRow}>
-                                    <th scope="rowgroup" colSpan={completedComparisons.length + 1}>
+                                    <th scope="rowgroup">
                                         {group.name}
                                     </th>
+                                    <td aria-hidden="true" colSpan={completedComparisons.length} />
                                 </tr>
                                 {group.fields.map((fieldName) => (
                                     <tr key={`${group.name}-${fieldName}`}>
                                         <th scope="row">{fieldName}</th>
                                         {completedComparisons.map(({index, engine}) => {
                                             const value = getSpecificationValue(engine, group.name, fieldName);
+                                            const measurement = group.name === "Engine Specs"
+                                                ? {"Power:": "power", "Torque:": "torque"}[fieldName]
+                                                : undefined;
 
                                             return (
                                                 <td className={value === "No data" ? styles.missingValue : undefined}
                                                     key={index}>
-                                                    {value}
+                                                    {measurement
+                                                        ? <EngineMeasurementValue measurement={measurement} value={value} />
+                                                        : value}
                                                 </td>
                                             );
                                         })}
@@ -509,7 +521,8 @@ export default function CompareDetails({preSelectedAuto}) {
                                 ))}
                             </tbody>
                         ))}
-                    </table>
+                        </table>
+                    </div>
                 </div>
             )}
         </section>

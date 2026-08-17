@@ -1,0 +1,229 @@
+.card {
+  position: relative;
+  overflow: hidden;
+  border: 1px solid var(--border-strong);
+  border-radius: 26px;
+  padding: clamp(28px, 5vw, 48px);
+  background:
+    radial-gradient(circle at 100% 0%, rgba(78, 157, 255, 0.16), transparent 24rem),
+    linear-gradient(145deg, rgba(255, 255, 255, 0.055), rgba(255, 255, 255, 0.018));
+  box-shadow: var(--shadow), inset 0 1px rgba(255, 255, 255, 0.04);
+}
+
+.heading > p {
+  color: var(--accent-strong);
+  font-size: 0.7rem;
+  font-weight: 760;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+}
+
+.heading h2 {
+  margin-top: 13px;
+  font-size: clamp(2rem, 4vw, 3rem);
+  font-weight: 640;
+  line-height: 1.06;
+  letter-spacing: -0.05em;
+  text-wrap: balance;
+}
+
+.heading > span {
+  display: block;
+  margin-top: 16px;
+  color: var(--text-soft);
+  font-size: 0.93rem;
+  line-height: 1.65;
+}
+
+.form {
+  display: grid;
+  gap: 22px;
+  margin-top: 36px;
+}
+
+.fieldGrid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 18px;
+}
+
+.field {
+  min-width: 0;
+  display: grid;
+  gap: 9px;
+  color: var(--text-soft);
+  font-size: 0.78rem;
+  font-weight: 650;
+}
+
+.labelRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.labelRow small {
+  color: var(--muted);
+  font-size: 0.68rem;
+  font-weight: 500;
+}
+
+.field input,
+.field textarea {
+  width: 100%;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 13px 14px;
+  color: var(--foreground);
+  background: rgba(4, 8, 13, 0.64);
+  font: inherit;
+  font-size: 0.92rem;
+  font-weight: 450;
+  outline: none;
+  transition: border-color 160ms ease, background-color 160ms ease, box-shadow 160ms ease;
+}
+
+.field input {
+  min-height: 48px;
+}
+
+.field textarea {
+  min-height: 180px;
+  line-height: 1.6;
+  resize: vertical;
+}
+
+.field input::placeholder,
+.field textarea::placeholder {
+  color: #6f7d8f;
+}
+
+.field input:hover,
+.field textarea:hover {
+  border-color: var(--border-strong);
+}
+
+.field input:focus,
+.field textarea:focus {
+  border-color: var(--accent);
+  background: rgba(6, 12, 20, 0.82);
+  box-shadow: 0 0 0 3px rgba(78, 157, 255, 0.14);
+}
+
+.field input:disabled,
+.field textarea:disabled {
+  cursor: wait;
+  opacity: 0.62;
+}
+
+.submitButton {
+  min-height: 50px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 28px;
+  justify-self: start;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  border-radius: 12px;
+  padding: 0 20px;
+  color: #06101c;
+  background: var(--accent-strong);
+  box-shadow: 0 14px 30px rgba(43, 125, 225, 0.22);
+  font-size: 0.88rem;
+  font-weight: 720;
+  cursor: pointer;
+  transition: background-color 160ms ease, transform 160ms ease;
+}
+
+.submitButton:hover:not(:disabled) {
+  background: #96c6ff;
+  transform: translateY(-2px);
+}
+
+.submitButton:disabled {
+  cursor: wait;
+  opacity: 0.68;
+}
+
+.feedback:empty {
+  display: none;
+}
+
+.error,
+.success {
+  margin-top: 24px;
+  border: 1px solid;
+  border-radius: 13px;
+  padding: 14px 16px;
+  font-size: 0.86rem;
+  line-height: 1.55;
+}
+
+.error {
+  border-color: rgba(255, 122, 122, 0.32);
+  color: #ffc0c0;
+  background: rgba(154, 42, 42, 0.14);
+}
+
+.success {
+  display: grid;
+  gap: 5px;
+  border-color: rgba(91, 214, 162, 0.3);
+  color: #bff4dd;
+  background: rgba(36, 126, 91, 0.14);
+}
+
+.success strong {
+  font-weight: 650;
+}
+
+.success span {
+  color: var(--text-soft);
+  font-size: 0.76rem;
+}
+
+@media (max-width: 600px) {
+  .card {
+    border-radius: 21px;
+    padding: 26px 20px;
+  }
+
+  .fieldGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .field input,
+  .field textarea {
+    font-size: 1rem;
+  }
+
+  .submitButton {
+    width: 100%;
+    justify-self: stretch;
+  }
+}
+
+@media (max-width: 380px) {
+  .card {
+    padding: 24px 17px;
+  }
+
+  .labelRow {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  .field textarea {
+    min-height: 150px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .field input,
+  .field textarea,
+  .submitButton {
+    transition: none;
+  }
+}
